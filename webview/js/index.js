@@ -47,8 +47,9 @@ let renderMappers = {
             let sectionIndex = tree.childNodes[0].nodeName.trim()
             let sectionName = sectionNeedMerge[sectionIndex];
             if(sectionName){
+                /** @type {Node} */
                 let sectionSourceTree = tree.childNodes[0]
-                let passSelected = dataMappers[tree.nodeName];
+                let passSelected = renderMappers[tree.nodeName];
                 if(passSelected){
                     sectionSourceTree = passSelected(sectionSourceTree)
                 }else{
@@ -102,6 +103,7 @@ inputbox.addEventListener("change",async function (e){
 let metadatatable = document.querySelector("#metadata");
 /** @param {string} key*/
 function displayMetadata(obj,key){
+    //metadatatable.childNodes.forEach(metadatatable.removeChild,metadatatable);
     for(let i in obj){
         let newkey = key+"."+i
         if(typeof obj[i]!="object"){
@@ -132,8 +134,13 @@ let dataMappers = {
         return data;
     },
     "TeXmacs":function (t,data) {
-        let version=/** @type {Element} */(t).getAttribute("version");
-        data.tmVersion=version
+        if(t.hasChildNodes()){
+            console.log(t)
+            let version=/** @type {Element} */(t).getAttribute("version");
+            data.tmVersion=version
+        }else{/** do nothing */}
+
+        return data
     },
     "style":function(t,data){
         let tuple = t.firstChild
@@ -149,7 +156,10 @@ let dataMappers = {
     }
 }
 
-/** @param {Node} tree*/
+/**
+ * @param {Node} tree
+ * @param {{}} context
+ */
 function scanMetaInfo(tree,context){
     let passSelected = dataMappers[tree.nodeName];
     let nextContext = context;
