@@ -69,6 +69,11 @@ inputbox.addEventListener("change",async function (e){
         const parser = new DOMParser();
         let tree = parser.parseFromString(await first.text(),"text/xml")
         tree = removeBlankText(tree)
+
+        let articleInfo = {}
+        scanMetaInfo(tree,articleInfo);
+        console.log(articleInfo)
+
         let displayTree = tree.cloneNode(true)
         //displayTree = adjustTreeStructure(displayTree)
         displayTree = mapNode(displayTree)
@@ -78,6 +83,35 @@ inputbox.addEventListener("change",async function (e){
         //console.log(tree)
     }else{ /* do nothing */; }
 })
+
+/** @type {Record<string,(tree:Node,context:any)=>any>} */
+let dataMappers = {
+    "doc-data":function (t,data) {
+        if(!data.docinfo){
+            data.docinfo={};
+        }
+        return data.docinfo;
+    },
+    "doc-title":function (t,data){
+        data.title = t.firstChild.nodeValue;
+        return data;
+    }
+}
+
+/** @param {Node} tree*/
+function scanMetaInfo(tree,context){
+    let passSelected = dataMappers[tree.nodeName];
+    let nextContext = context;
+    if(passSelected){
+        nextContext = passSelected(tree,context)
+    }else{ /* do nothing */; }
+
+    for(let i of tree.childNodes){
+        scanMetaInfo(i,nextContext);
+    }
+    return context;
+
+}
 
 /**
  * map TMML node to HTML node
