@@ -19,6 +19,9 @@ let renderMappers = {
     "#text":function passText(tree){
         return tree;
     },
+    "nbsp":function (tree){
+        return document.createTextNode("&nbsp;");
+    },
     "tm-sym":function passSymbolText(tree) {
         let matched = tree.firstChild.nodeValue.match(
             /#([0-9a-zA-Z]*)/
@@ -30,19 +33,30 @@ let renderMappers = {
             return tree;
         }
     },
+    // TODO:refractor structure ,then convert section in its own pass
     "tm-par":function passParagraph(tree){
         let sectionNeedMerge = {
             "section" : "h2",
             "subsection" : "h3",
             "subsubsection" : "h4",
+            "doc-data" : "doc-data",
         }
         //extract sections
         if(tree.childNodes.length==1){
             //console.info(tree.childNodes[0].nodeName)
-            let section = sectionNeedMerge[tree.childNodes[0].nodeName.trim()]
-            if(section){
-                let subtitle = document.createElement(section)
-                subtitle.append(...tree.childNodes[0].childNodes)
+            let sectionIndex = tree.childNodes[0].nodeName.trim()
+            let sectionName = sectionNeedMerge[sectionIndex];
+            if(sectionName){
+                let sectionSourceTree = tree.childNodes[0]
+                let passSelected = dataMappers[tree.nodeName];
+                if(passSelected){
+                    sectionSourceTree = passSelected(sectionSourceTree)
+                }else{
+                    reportUnknown(sectionSourceTree)
+                }
+                let subtitle = document.createElement(sectionName)
+                
+                subtitle.append(...sectionSourceTree.childNodes)
                 return subtitle
             }else{
                 let par = document.createElement("p")
@@ -54,7 +68,12 @@ let renderMappers = {
             par.append(...tree.childNodes)
             return par;
         }
-    }
+    },
+    "doc-title":function(tree){
+        let par = document.createElement("h1")
+        par.append(...tree.childNodes)
+        return par;
+    },
 }
 /** @type {HTMLInputElement} */
 let inputbox = document.querySelector("#fileinput");
