@@ -1,18 +1,38 @@
-"use strict";
 /// @ts-check
+"use strict";
+
 /** @type {Record<string,(tree:Node)=>Node>} */
-let passes = {
+let renderMappers = {
     "TeXmacs":function passTexmacsRoot(tree){
         //tree.firstChild.nodeName == "TeXmacs";
         return tree;
     },
+    // TODO: META INFO
     "#document":function passRoot(tree){
-        // TODO: META INFO
-        return tree;
+        // tree is document;
+        let texmacs = tree.firstChild
+        let version=texmacs.getAttribute("version");
+        let children = Array.from(texmacs.childNodes.values())
+        let body = children.find((v)=>{return v.nodeName=="body"})
+        let newRoot = document.createElement("article");
+        //console.log(...tree.children)
+        newRoot.prepend(`Create by TeXmacs version ${version}`)
+        newRoot.append(...body.childNodes);
+        return newRoot;
     },
     "#text":function passText(tree){
-        // TODO: Text entity
         return tree;
+    },
+    "tm-sym":function passSymbolText(tree) {
+        let matched = tree.firstChild.nodeValue.match(
+            /#([0-9a-zA-Z]*)/
+        );
+        if(matched[0]){
+            return document.createTextNode(String.fromCodePoint(Number("0x"+matched[1])))
+        }else{
+            //TODO: Alphabet text entity
+            return tree;
+        }
     },
     "tm-par":function passParagraph(tree){
         let sectionNeedMerge = {
@@ -20,7 +40,6 @@ let passes = {
             "subsection" : "h3",
             "subsubsection" : "h4",
         }
-        console.info(tree.childNodes)
         //extract sections
         if(tree.childNodes.length==1){
             //console.info(tree.childNodes[0].nodeName)
@@ -51,7 +70,7 @@ inputbox.addEventListener("change",async function (e){
         let tree = parser.parseFromString(await first.text(),"text/xml")
         tree = removeBlankText(tree)
         let displayTree = tree.cloneNode(true)
-        displayTree = adjustTreeStructure(displayTree)
+        //displayTree = adjustTreeStructure(displayTree)
         displayTree = mapNode(displayTree)
         console.log(displayTree)
         console.log(tree)
@@ -60,25 +79,12 @@ inputbox.addEventListener("change",async function (e){
     }else{ /* do nothing */; }
 })
 
-/** @param {Document} tree*/
-function adjustTreeStructure(tree){
-    let texmacs = tree.firstChild
-    let version=texmacs.getAttribute("version");
-    let children = Array.from(texmacs.childNodes.values())
-    let body = children.find((v)=>{return v.nodeName=="body"})
-    let newRoot = document.createElement("article");
-    //console.log(...tree.children)
-    newRoot.prepend(`Create by TeXmacs version ${version}`)
-    newRoot.append(...body.children);
-    return newRoot;
-}
-
 /**
  * map TMML node to HTML node
  * @todo give passed tree to subnode or raw tree? 
  * @param {Node} tree */
  function mapNode(tree){
-    let passSelected = passes[tree.nodeName];
+    let passSelected = renderMappers[tree.nodeName];
     let resTree = tree;
     if(passSelected){
         resTree = passSelected(tree)
@@ -96,11 +102,13 @@ function adjustTreeStructure(tree){
 
 /**
  * remove blank text nodes
- * @param {Node} tree */
+ * @template {Node} T   
+ * @param {T} tree 
+ * @returns {T}
+ */
 function removeBlankText(tree){
-    console.debug("invoked")
+    //childNodes is dynamic, remove after scan to count all nodes. 
     let removedChilds = [];
-    // change to leaf element should not override their parents
     for(let i of tree.childNodes){
         //console.log(i,tree.childNodes)
         if(i.nodeType==Node.TEXT_NODE&&/^\s*$/.test(i.nodeValue)){
@@ -118,12 +126,5 @@ function reportUnknown(tree){
     console.warn("Unknown node:",tree.nodeName)
 }
 
-/** @param {Element} tree */
-
-
-/** @param {Document} tree */
-
-
-/** @param {Document} tree */
 
 
