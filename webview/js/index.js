@@ -1,79 +1,94 @@
 /// @ts-check
 "use strict";
 
-/** @type {Record<string,(tree:Node)=>Node>} */
+/** @typedef {Record<string,any>} contextType */
+
+/** 
+ * @type {Record<string,(tree:Node,output:Element,context:Readonly< contextType >)=>[Element,contextType]>} 
+ */
 let renderMappers = {
-    "TeXmacs":function passTexmacsRoot(tree){
-        return tree;
+    "TeXmacs":function passTexmacsRoot(tree,output,context){
+        let removedChilds = [];
+        for(let i of tree.childNodes){
+            //console.log(i,tree.childNodes)
+            switch(i.nodeName){
+                case "style":
+                case "references":
+                case "auxiliary":
+                removedChilds.push(i);
+            }
+        }
+        removedChilds.every(tree.removeChild,tree);
+        return [output,{}];
     },
     // TODO: META INFO
-    "#document":function passRoot(tree){
-        // tree is document;
-        let texmacs = tree.firstChild
-        let children = Array.from(texmacs.childNodes.values())
-        let body = children.find((v)=>{return v.nodeName=="body"})
-        let newRoot = document.createElement("article");
-        newRoot.append(...body.childNodes);
-        return newRoot;
+    "#document":function passRoot(tree,output,context){
+        return [output,{}];
     },
-    "#text":function passText(tree){
-        return tree;
+    "body":function name(tree,output,context) {
+        //context["mode"] = "text"
+        //output.append(...tree.childNodes);
+        return [output,{mode:"text"}];
     },
-    "nbsp":function (tree){
-        return document.createTextNode("&nbsp;");
+    "doc-title":function(tree,output,context){
+        let par = document.createElement("h1")
+        par.append(...tree.childNodes)
+        output.append(par)
+        return [par,{}];
     },
-    "tm-sym":function passSymbolText(tree) {
+    "section":function name(tree,output,context) {
+        let title = document.createElement("h2");
+        title.append(...tree.childNodes);
+        output.append(title);
+        return [title,{}];
+    },
+    "subsection":function name(tree,output,context) {
+        let title = document.createElement("h3");
+        title.append(...tree.childNodes);
+        output.append(title);
+        return [title,{}];
+    },
+    "subsubsection":function name(tree,output,context) {
+        let title = document.createElement("h4");
+        title.append(...tree.childNodes);
+        output.append(title);
+        return [title,{}];
+    },
+    "#text":function passText(tree,output,context){
+        if(context.mode=="text"){
+            let par = document.createElement("p");
+            par.innerText=tree.nodeValue
+            output.append(par);
+        }else{
+            let text = document.createTextNode(tree.nodeValue);
+            output.append(text);
+        }
+        return [output,{}];
+    },
+    "nbsp":function (tree,output,context){
+        let text = document.createTextNode("&nbsp;");
+        output.append(tree);
+        return [output,{}];
+    },
+    "tm-sym":function passSymbolText(tree,output,context) {
         let matched = tree.firstChild.nodeValue.match(
             /#([0-9a-zA-Z]*)/
         );
         if(matched[0]){
-            return document.createTextNode(String.fromCodePoint(Number("0x"+matched[1])))
+            let charEntity = document.createTextNode(String.fromCodePoint(Number("0x"+matched[1])))
+            output.append(charEntity)
         }else{
             //TODO: Alphabet text entity
-            return tree;
+            output.append(tree.cloneNode(false))
         }
+        return [output,{}];
     },
-    // TODO:refractor structure ,then convert section in its own pass
-    "tm-par":function passParagraph(tree){
-        let sectionNeedMerge = {
-            "section" : "h2",
-            "subsection" : "h3",
-            "subsubsection" : "h4",
-            "doc-data" : "doc-data",
-        }
-        //extract sections
-        if(tree.childNodes.length==1){
-            //console.info(tree.childNodes[0].nodeName)
-            let sectionIndex = tree.childNodes[0].nodeName.trim()
-            let sectionName = sectionNeedMerge[sectionIndex];
-            if(sectionName){
-                /** @type {Node} */
-                let sectionSourceTree = tree.childNodes[0]
-                let passSelected = renderMappers[tree.nodeName];
-                if(passSelected){
-                    sectionSourceTree = passSelected(sectionSourceTree)
-                }else{
-                    reportUnknown(sectionSourceTree)
-                }
-                let subtitle = document.createElement(sectionName)
-                
-                subtitle.append(...sectionSourceTree.childNodes)
-                return subtitle
-            }else{
-                let par = document.createElement("p")
-                par.append(...tree.childNodes)
-                return par;
-            }
-        }else{
-            let par = document.createElement("p")
-            par.append(...tree.childNodes)
-            return par;
-        }
-    },
-    "doc-title":function(tree){
-        let par = document.createElement("h1")
+    // TODO:handle par not in <\body|xxx>yyy</body>
+    "tm-par":function passParagraph(tree,output,context){
+        let par = document.createElement("p")
         par.append(...tree.childNodes)
-        return par;
+        document.append(par)
+        return [par,{}]
     },
 }
 /** @type {HTMLInputElement} */
@@ -90,13 +105,13 @@ inputbox.addEventListener("change",async function (e){
         scanMetaInfo(tree,articleInfo);
         displayMetadata(articleInfo,"")
 
-        let displayTree = tree.cloneNode(true)
-        //displayTree = adjustTreeStructure(displayTree)
-        displayTree = mapNode(displayTree)
+        // let displayTree = tree.cloneNode(true)
+        let [displayTree,] = mapNode(
+            tree.cloneNode(true),document.createElement("article"),[{mode:"none"}]
+        )
         console.log(displayTree)
         console.log(tree)
         document.querySelector("#rendered").appendChild(displayTree);
-        //console.log(tree)
     }else{ /* do nothing */; }
 })
 
@@ -177,22 +192,36 @@ function scanMetaInfo(tree,context){
 /**
  * map TMML node to HTML node
  * @todo give passed tree to subnode or raw tree? 
- * @param {Node} tree */
- function mapNode(tree){
-    let passSelected = renderMappers[tree.nodeName];
-    let resTree = tree;
+ * @param {Node} iptTree 
+ * @param {Element} resTree
+ * @param {Array<contextType>} contextStack
+ * @returns {[Element,contextType]}
+ */
+ function mapNode(iptTree,resTree,contextStack){
+    //console.group(iptTree.parentNode?.nodeName)
+    //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
+    let passSelected = renderMappers[iptTree.nodeName];
+    let context = contextStack.reduce(
+        (pre,cur)=>{ return Object.assign(pre,cur)}
+    ,{});
     if(passSelected){
-        resTree = passSelected(tree)
+        let newScope = undefined;
+        [resTree,newScope] = passSelected(iptTree,resTree,context)
+        if(newScope!==undefined){
+            contextStack.push(newScope)
+        }else{ /* do nothing */; }
     }else{
-        reportUnknown(tree)
+
+        let iptCopy = /** @type {Element} */ (iptTree.cloneNode(false));
+        resTree.appendChild(iptCopy);
+        resTree=iptCopy
+        reportUnknown(iptTree)
     }
-    // change to leaf element should not override their parents
-    for(let i of resTree.childNodes){
-        let childResTree = mapNode(i);
-        //console.info(tree.children )
-        resTree.replaceChild(childResTree,i);
+    for(let i of iptTree.childNodes){
+        mapNode(i,resTree,contextStack);
     }
-    return resTree;
+    //console.groupEnd()
+    return [resTree,context];
 }
 
 /**
@@ -205,7 +234,6 @@ function removeBlankText(tree){
     //childNodes is dynamic, remove after scan to count all nodes. 
     let removedChilds = [];
     for(let i of tree.childNodes){
-        //console.log(i,tree.childNodes)
         if(i.nodeType==Node.TEXT_NODE&&/^\s*$/.test(i.nodeValue)){
             removedChilds.push(i);
         }else{
