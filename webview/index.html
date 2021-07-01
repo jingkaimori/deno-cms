@@ -1,14 +1,23 @@
 <html>
     <head>
         <title>Test </title>
+        <style>
+            h1 h2 h3 h4 h5 h6{
+                display: inline-block;
+            }
+        </style>
     </head>
     <body>
         <input id="fileinput" type="file" />
-        <table id="metadata">
-            <tr>
-                <th>Key</th>
-                <th>Value</th>
-            </tr>
+        <table>
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody id="metadata">
+            </tbody>
         </table>
         <div id="rendered"></div>
         <script src="js/index.js"></script>

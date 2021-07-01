@@ -78,6 +78,12 @@ let renderMappers = {
         output.append(par)
         return [par,{}]
     },
+    "equation_42_":function(tree,output,context){
+        let math = document.createElementNS("http://www.w3.org/1998/Math/MathML","math")
+        // let param = tree.firstChild
+        // math.append(...param.childNodes)
+        return [math,{mode:"math"}];
+    },
 }
 /** @type {HTMLInputElement} */
 let inputbox = document.querySelector("#fileinput");
@@ -99,14 +105,17 @@ inputbox.addEventListener("change",async function (e){
         )
         console.log(displayTree)
         console.log(tree)
-        document.querySelector("#rendered").appendChild(displayTree);
+        
+        let renderedDoc = document.querySelector("#rendered")
+        renderedDoc.childNodes.forEach(renderedDoc.removeChild,renderedDoc);
+        renderedDoc.appendChild(displayTree);
     }else{ /* do nothing */; }
 })
 
 let metadatatable = document.querySelector("#metadata");
 /** @param {string} key*/
 function displayMetadata(obj,key){
-    //metadatatable.childNodes.forEach(metadatatable.removeChild,metadatatable);
+    metadatatable.childNodes.forEach(metadatatable.removeChild,metadatatable);
     for(let i in obj){
         let newkey = key+"."+i
         if(typeof obj[i]!="object"){
