@@ -97,7 +97,7 @@ inputbox.addEventListener("change",async function (e){
 
         let articleInfo = {}
         scanMetaInfo(tree,articleInfo);
-        displayMetadata(articleInfo,"")
+        displayMetadata(articleInfo)
 
         // let displayTree = tree.cloneNode(true)
         let [displayTree,] = mapNode(
@@ -112,10 +112,17 @@ inputbox.addEventListener("change",async function (e){
     }else{ /* do nothing */; }
 })
 
-let metadatatable = document.querySelector("#metadata");
-/** @param {string} key*/
-function displayMetadata(obj,key){
+function displayMetadata(obj){
+    let metadatatable = /** @type {HTMLTableSectionElement}*/(document.querySelector("#metadata"));
     metadatatable.childNodes.forEach(metadatatable.removeChild,metadatatable);
+    displayFields(obj,metadatatable,"");
+}
+
+/** 
+ * @param {string} key
+ * @param {Readonly<HTMLElement>} DOMTable
+*/
+function displayFields(obj,DOMTable,key){
     for(let i in obj){
         let newkey = key+"."+i
         if(typeof obj[i]!="object"){
@@ -126,9 +133,9 @@ function displayMetadata(obj,key){
             val.innerText=obj[i]
             row.appendChild(def);
             row.appendChild(val);
-            metadatatable.appendChild(row);
+            DOMTable.appendChild(row);
         }else{
-            displayMetadata(obj[i],newkey)
+            displayFields(obj[i],DOMTable,newkey)
         }
     }
 }
@@ -143,6 +150,19 @@ let dataMappers = {
     },
     "doc-title":function (t,data){
         data.title = t.firstChild.nodeValue;
+        return data;
+    },
+    "doc-author":function (t,data){
+        data.authorlist=[];
+        return data;
+    },
+    "author-data":function (t,data){
+        let newauthor = {}
+        data.authorlist.push(newauthor)
+        return newauthor;
+    },
+    "author-name":function (t,data){
+        data.name = t.firstChild.nodeValue;
         return data;
     },
     "TeXmacs":function (t,data) {
@@ -173,12 +193,15 @@ let dataMappers = {
  * @param {{}} context
  */
 function scanMetaInfo(tree,context){
+    // console.group()
     let passSelected = dataMappers[tree.nodeName];
     let nextContext = context;
     if(passSelected){
         nextContext = passSelected(tree,context) || context;
     }else{ /* do nothing */; }
 
+    // console.log(context)
+    // console.groupEnd()
     for(let i of tree.childNodes){
         scanMetaInfo(i,nextContext);
     }
