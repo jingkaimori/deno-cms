@@ -27,21 +27,16 @@ let titletext:parserfunc =
       match(/[^\n\r]/)
     )))
 
-let titleline:parserfunc = seq(
-  multiple(match(/[\n\r]/),1),
-  title,
-  multiple(match(/[\n\r]/),1));
-
 let newline: parserfunc = 
   or(title,plain);
 
-var doc: parserfunc =
+export let doc: parserfunc =
   seq(
     newline,
     multiple(
       seq(linebreak,newline)));
 
-function multiple(func: parserfunc,min?:number,max?:number): parserfunc {
+export function multiple(func: parserfunc,min?:number,max?:number): parserfunc {
   return (str) => {
     let times = -1;
     let receive = true, newstr = str;
@@ -59,7 +54,7 @@ function multiple(func: parserfunc,min?:number,max?:number): parserfunc {
   }
 }
 
-function or(...functions: parserfunc[]): parserfunc {
+export function or(...functions: parserfunc[]): parserfunc {
   return (str) => {
     for (let func of functions) {
       let [receive, next] = func(str);
@@ -71,21 +66,21 @@ function or(...functions: parserfunc[]): parserfunc {
   }
 }
 
-function seq(...functions: parserfunc[]): parserfunc {
+export function seq(...functions: parserfunc[]): parserfunc {
   return (str) => {
     let receive = true, newstr = str;
     for (let func of functions) {
       [receive, newstr] = func(newstr);
       if (receive) {
       } else {
-        return [false, str]
+        return [false, newstr]
       }
     }
     return [true, newstr]
   }
 }
 
-function eq(expected: string): parserfunc {
+export function eq(expected: string): parserfunc {
   return (str) => {
     if (str.length>0 && str.indexOf(expected) == 0) {
       return [true, str.slice(expected.length)]
@@ -95,7 +90,7 @@ function eq(expected: string): parserfunc {
   }
 }
 
-function match(pattern: RegExp): parserfunc {
+export function match(pattern: RegExp): parserfunc {
   return (str) => {
     let res = str.match(pattern);
     if (str.length>0 && res?.index === 0) {
@@ -105,9 +100,3 @@ function match(pattern: RegExp): parserfunc {
     }
   }
 }
-
-console.log(eq("=")(""));
-console.log(eq("=")("====="));
-console.log(multiple(eq("="))(""));
-console.log(multiple(eq("="))("====="));
-console.log(doc("=== title ==="))
