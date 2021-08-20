@@ -38,7 +38,12 @@ export let titletext: parserfunc = symbol(
 );
 
 
-let newline: parserfunc = or(title, plain);
+export let listitem: parserfunc = symbol(
+  seq(multiple(match(/[*#;:]/), 1), plain),
+  "__listitem",
+);
+
+let newline: parserfunc = or(title, listitem, plain);
 
 export let doc: parserfunc = seq(
   newline,
