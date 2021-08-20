@@ -45,6 +45,13 @@ Deno.test({
       ),
       [false, ""],
     );
+    assertEquals(
+      multiple(eq("="), 1, 1)(
+        "=",
+        new treeNode("root"),
+      ),
+      [false, ""],
+    );
   },
 });
 
