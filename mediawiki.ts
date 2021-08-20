@@ -37,6 +37,16 @@ export let titletext: parserfunc = symbol(
   "titletext",
 );
 
+export let hyperlink: parserfunc = symbol(
+  seq(
+    eq("[["),
+    plain,
+    eq(">>"),
+    path,
+    eq("]]"),
+  ),
+  "hyperlink",
+);
 
 export let listitem: parserfunc = symbol(
   seq(multiple(match(/[*#;:]/), 1), plain),

@@ -31,3 +31,13 @@ Deno.test({
     ]);
   },
 });
+
+Deno.test({
+  name: "hyperlink() test",
+  fn(): void {
+    assertEquals(titletext("[[ title >> url]]", new treeNode("root")), [
+      true,
+      "",
+    ]);
+  },
+});
