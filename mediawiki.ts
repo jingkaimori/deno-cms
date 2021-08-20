@@ -1,15 +1,22 @@
-
 import { eq, match, multiple, or, parserfunc, seq, symbol } from "./macros.ts";
 
 let plainchar: parserfunc = match(/[^\n\r]/);
 let plain: parserfunc = symbol(
   multiple(plainchar),
-  "plain",
+  "__plain",
+);
+
+let path: parserfunc = symbol(
+  multiple(match(/[^\n\r\]>]/)),
+  "__path",
 );
 
 let whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
-let linebreak: parserfunc = multiple(match(/[\n\r]/), 1);
+let linebreak: parserfunc = or(
+  symbol(multiple(match(/[\n\r]/), 2), "multiple linebreak"),
+  match(/[\n\r]/),
+);
 
 export let title: parserfunc = symbol(function __title(str, context) {
   return (seq(
@@ -30,10 +37,8 @@ export let titletext: parserfunc = symbol(
   "titletext",
 );
 
-export let newline: parserfunc = symbol(
-  or(title, plain),
-  "line",
-);
+
+let newline: parserfunc = or(title, plain);
 
 export let doc: parserfunc = seq(
   newline,
@@ -41,4 +46,3 @@ export let doc: parserfunc = seq(
     seq(linebreak, newline),
   ),
 );
-
