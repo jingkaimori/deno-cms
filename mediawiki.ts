@@ -6,11 +6,6 @@ let plain: parserfunc = symbol(
   "__plain",
 );
 
-let path: parserfunc = symbol(
-  multiple(match(/[^\n\r\]>]/)),
-  "__path",
-);
-
 let whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
 let linebreak: parserfunc = or(
@@ -37,23 +32,44 @@ export let titletext: parserfunc = symbol(
   "titletext",
 );
 
+let path: parserfunc = symbol(
+  multiple(match(/[^\n\r\]>]/)),
+  "__path",
+);
+
+let label: parserfunc = symbol(
+  multiple(match(/[^\n\r\]>]/)),
+  "__label",
+);
+
 export let hyperlink: parserfunc = symbol(
   seq(
     eq("[["),
-    plain,
-    eq(">>"),
-    path,
-    eq("]]"),
+    label,
+    multiple(
+      seq(
+        eq(">>"),
+        path,
+      ),
+      0,
+      2
+    ),eq("]]")
   ),
   "hyperlink",
 );
 
+let linkfreechar: parserfunc = match(/[^\n\r\[]/);
+
+let inline: parserfunc = symbol(multiple(
+  or(hyperlink, symbol(seq(multiple(eq("[")), multiple(linkfreechar,1)), "__plain")),
+),"text");
+
 export let listitem: parserfunc = symbol(
-  seq(multiple(match(/[*#;:]/), 1), plain),
+  seq(multiple(match(/[*#;:]/), 1), inline),
   "__listitem",
 );
 
-let newline: parserfunc = or(title, listitem, plain);
+let newline: parserfunc = or(title, listitem, inline);
 
 export let doc: parserfunc = seq(
   newline,

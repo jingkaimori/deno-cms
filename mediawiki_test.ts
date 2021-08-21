@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.90.0/testing/asserts.ts";
-import { doc, title, titletext } from "./mediawiki.ts";
+import { doc, hyperlink, title, titletext } from "./mediawiki.ts";
 import { treeNode } from "./macros.ts";
 
 Deno.test({
@@ -35,7 +35,7 @@ Deno.test({
 Deno.test({
   name: "hyperlink() test",
   fn(): void {
-    assertEquals(titletext("[[ title >> url]]", new treeNode("root")), [
+    assertEquals(hyperlink("[[ title >> url]]", new treeNode("root")), [
       true,
       "",
     ]);
