@@ -1,1 +1,5 @@
 .vscode
+
+*.js
+# personal data folder
+web-demo/export
