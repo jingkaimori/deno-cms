@@ -34,6 +34,8 @@ inputbox.forEach((v) => {
       let tree = new treeNode("root");
       doc(content, tree);
       postprocess(tree);
+
+      console.log(tree.toString());
       // let displayTree = tree.cloneNode(true)
       let [displayTree] = mapNode(
         tree,
