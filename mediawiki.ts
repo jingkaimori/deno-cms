@@ -1,4 +1,4 @@
-import { eq, match, multiple, or, parserfunc, seq, symbol } from "./macros.ts";
+import { eq, match, multiple, or, parserfunc, seq, symbol, treeNode } from "./macros.ts";
 
 let plainchar: parserfunc = match(/[^\n\r]/);
 let plain: parserfunc = symbol(
@@ -99,3 +99,44 @@ export let doc: parserfunc = particleinmiddle(
   newline,
   linebreak,
 );
+
+export function postprocess(tree:treeNode) {
+  if(tree.childs.length>0 && tree.childs[0].name == "__listitem"){
+      let [restree] = listmerge(tree.childs,1);
+      tree.childs = [restree];
+  }else{
+      for(let i of tree.childs){
+      postprocess(i)
+
+      }
+  }
+}
+
+function listmerge(iptArr: treeNode[],level:number):[treeNode,number] {
+let resTree = new treeNode("list");
+let skip:number=0;
+for(let [i,item] of iptArr.entries()){
+    if(i<skip){
+        continue;
+    }
+    let match = item.raw.match(/^[*#:;]+/)
+    let lth = match?.at(0)?.length || -1;
+    if(lth === level){
+        let newNode = new treeNode("item")
+        newNode.raw = item.raw
+        newNode.childs = item.childs
+        resTree.appendchild(newNode)
+    }else if(lth > level){
+        let newNode = new treeNode("item")
+        newNode.raw = item.raw
+        let [subResTree,__skip]=listmerge(iptArr.slice(i),lth)
+        skip =i+ __skip;
+        newNode.childs.push(subResTree)
+        resTree.appendchild(newNode)
+        
+    }else if(lth < level){
+        return [resTree,i];
+    }
+}
+return [resTree,iptArr.length];
+}
