@@ -8,10 +8,7 @@ let plain: parserfunc = symbol(
 
 let whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
-let linebreak: parserfunc = or(
-  symbol(multiple(match(/[\n\r]/), 2), "multiple linebreak"),
-  match(/[\n\r]/),
-);
+let linebreak: parserfunc = multiple(match(/[\n\r]/), 1)
 
 export let title: parserfunc = symbol(function __title(str, context) {
   return (seq(
@@ -22,12 +19,9 @@ export let title: parserfunc = symbol(function __title(str, context) {
 }, "title");
 
 export let titletext: parserfunc = symbol(
-  seq(
+  particleinmiddle(
     multiple(match(/[^\n\r=]/), 1),
-    multiple(seq(
-      eq("="),
-      multiple(match(/[^\n\r=]/), 1),
-    )),
+    eq("="),
   ),
   "titletext",
 );
@@ -52,28 +46,56 @@ export let hyperlink: parserfunc = symbol(
         path,
       ),
       0,
-      2
-    ),eq("]]")
+      2,
+    ),
+    eq("]]"),
   ),
   "hyperlink",
 );
 
-let linkfreechar: parserfunc = match(/[^\n\r\[]/);
+export let linkfreechar: parserfunc = match(/[^\n\r\[]/);
 
-let inline: parserfunc = symbol(multiple(
-  or(hyperlink, symbol(seq(multiple(eq("[")), multiple(linkfreechar,1)), "__plain")),
-),"text");
+export let inline: parserfunc = symbol(
+  multiple(
+    or(
+      hyperlink,
+      symbol(seq(multiple(eq("[")), multiple(linkfreechar, 1)), "__plain"),
+    ),1
+  ),
+  "text",
+);
 
 export let listitem: parserfunc = symbol(
   seq(multiple(match(/[*#;:]/), 1), inline),
   "__listitem",
 );
 
-let newline: parserfunc = or(title, listitem, inline);
+let titleline = seq(title, linebreak);
 
-export let doc: parserfunc = seq(
-  newline,
-  multiple(
-    seq(linebreak, newline),
+/**
+ * match mode like `A(BA)*`
+ * @param beginend
+ * @param middle
+ * @returns
+ */
+function particleinmiddle(
+  beginend: parserfunc,
+  middle: parserfunc,
+): parserfunc {
+  return seq(beginend, multiple(seq(middle, beginend)));
+}
+
+let paragraph = symbol(
+  or(
+    particleinmiddle(listitem, match(/[\n\r]/)),
+    particleinmiddle(inline, match(/[\n\r]/)),
   ),
+  "par",
+);
+
+let newline: parserfunc = or(title, paragraph);
+
+export let doc: parserfunc = particleinmiddle(
+  newline,
+  linebreak,
 );
