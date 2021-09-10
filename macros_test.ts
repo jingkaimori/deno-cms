@@ -9,6 +9,7 @@ Deno.test({
       true,
       "====",
     ]);
+    assertEquals(eq("===")("=====", new treeNode("root")), [true, "=="]);
   },
 });
 

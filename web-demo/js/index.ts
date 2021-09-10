@@ -1,4 +1,4 @@
-import { doc, postprocess } from "../../mediawiki.ts";
+import { doc, postprocess } from "../../xwiki.ts";
 import { treeNode } from "../../macros.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
 
@@ -32,10 +32,41 @@ inputbox.forEach((v) => {
         xmltree.querySelector("xwikidoc > content")?.firstChild?.nodeValue,
       );
       let tree = new treeNode("root");
-      doc(content, tree);
+      let [res,rest] = doc(content, tree);
       postprocess(tree);
 
-      console.log(tree.toString());
+      let statElem=
+        document.querySelector("#stat") as HTMLParagraphElement;
+      if(res){
+        statElem.classList.add("success");
+        statElem.classList.remove("failure");
+        statElem.innerText = "success";
+      }else{
+        statElem.classList.add("failure");
+        statElem.classList.remove("success");
+        statElem.innerText = "failure";
+      }
+
+      console.log(rest)
+      if(rest.length==0){
+
+      }else{
+        let splitstr = content.slice(0,content.indexOf(rest))
+        let begini = splitstr.lastIndexOf("\n")
+        let beginp = splitstr;
+        if(begini>0){
+        beginp = splitstr.slice(begini);}
+
+        let endi = rest.indexOf('\n')
+        let endp = rest;
+        if(endi>0){
+          endp = rest.slice(0,endi);
+        }
+
+        (document.querySelector("#diff > #front") as HTMLSpanElement).innerText = beginp;
+        (document.querySelector("#diff > #end") as HTMLSpanElement).innerText = endp;
+      }
+      console.log(tree);
       // let displayTree = tree.cloneNode(true)
       let [displayTree] = mapNode(
         tree,
@@ -47,7 +78,9 @@ inputbox.forEach((v) => {
 
       let renderedDoc: HTMLDivElement =
         (document.querySelector("#rendered") as HTMLDivElement);
-      clearChilds(renderedDoc);
+        clearChilds(renderedDoc);
+        clearChilds((document.querySelector("#diff > #front") as HTMLSpanElement));
+        clearChilds((document.querySelector("#diff > #end") as HTMLSpanElement));
       renderedDoc.appendChild(displayTree);
     } else { /* do nothing */ }
   });

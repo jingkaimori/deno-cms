@@ -25,8 +25,13 @@ type processer = (
     "root": mapToNode("article"),
     "par": mapToNode("p"),
     "hyperlink": mapToNode("a"),
-    "list": mapToNode("ul"),
+    "ulist": mapToNode("ul"),
+    "olist": mapToNode("ol"),
+    "dlist": mapToNode("dl"),
     "item": mapToNode("li"),
+    "dt": mapToNode("dt"),
+    "dd": mapToNode("dd"),
+    "br": mapToNode("br"),
     "__label": mapToText(),
     "__path": function (tree, output, context) {
         if(/^url:(.*)/.test(tree.raw)){

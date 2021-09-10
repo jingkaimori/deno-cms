@@ -107,6 +107,17 @@ export function eq(expected: string): parserfunc {
   };
 }
 
+
+export function neq(expected: string): parserfunc {
+  return (str, context) => {
+    if (str.length > 0 && str.indexOf(expected) == 0) {
+      return [false, str];
+    } else {
+      return [true, str.slice(1)];
+    }
+  };
+}
+
 export function match(pattern: RegExp): parserfunc {
   return (str, context) => {
     let res = str.match(pattern);

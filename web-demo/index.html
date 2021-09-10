@@ -1,14 +1,21 @@
-<html>
+<html> 
     <head>
         <title>Test </title>
         <style>
             h1 h2 h3 h4 h5 h6{
                 display: inline-block;
             }
+            .stats .failure{
+                color: #ff2626;
+            }
+            .stats .success{
+                color: #419341;
+            }
         </style>
     </head>
     <body>
         <p>This is test page for render xwiki syntax. Extract <code>.xar</code> file exported from xwiki into <code>./exported</code> directory.  </p>
+        <div class="stats"><p id="stat"></p><p id="diff"><span class="success" id="front"></span><span class="failure" id="end"></span></p></div>
         <div id="rendered"></div>
         <ul id="list">
             
