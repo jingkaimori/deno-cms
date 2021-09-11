@@ -103,7 +103,7 @@ function particleinmiddle(
  */
 const macroattr: parserfunc = seq(
   whitespace,
-  multiple(not(or(eq("}}"), linebreak))),
+  multiple(not(or(eq("}}"),eq("/}}"), linebreak))),
 );
 
 /**
@@ -143,19 +143,28 @@ const macrobody: parserfunc = symbol(
   "__plain",
 );
 
-const macrowithoutbody: parserfunc = modifycontext(
-  seq(
-    eq("{{"),
-    match(/[0-9a-zA-Z]*/),
-    multiple(macroattr),
-    eq("/}}"),
+const macrowithoutbody: parserfunc = symbol(
+  modifycontext(
+    seq(
+      eq("{{"),
+      match(/[^ /{}\n]*/),
+      multiple(macroattr),
+      eq("/}}"),
+    ),
+    getmacroname,
   ),
-  getmacroname,
+  "template",
 );
 
 const macroblock: parserfunc = symbol(
   or(seq(macrobegin, macrobody, macroend)),
   "template",
+);
+
+const escapetext: parserfunc = symbol(multiple(neq("}}}")), "__plain");
+const escape: parserfunc = symbol(
+  seq(eq("{{{"), escapetext, eq("}}}")),
+  "rawtext",
 );
 
 const br = symbol(match(/[\n\r]/), "br");
@@ -169,6 +178,7 @@ const paragraph = symbol(
 );
 
 const newline: parserfunc = or(
+  escape,
   title,
   horizonal,
   macroblock,

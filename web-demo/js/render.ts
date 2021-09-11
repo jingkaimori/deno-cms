@@ -32,6 +32,10 @@ type processer = (
     "dt": mapToNode("dt"),
     "dd": mapToNode("dd"),
     "br": mapToNode("br"),
+    "template-warning": mapToNode("warning"),
+    "template-code": mapToNode("code"),
+    "template-cite": mapToNode("cite"),
+    "template-toc": mapToNode("toc"),
     "__label": mapToText(),
     "__path": function (tree, output, context) {
         if(/^url:(.*)/.test(tree.raw)){
