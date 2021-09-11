@@ -11,9 +11,9 @@ import {
   seq,
   symbol,
   treeNode,
-} from "./macros.ts";
+} from "../macros/macros.ts";
 
-let whitespace: parserfunc = multiple(match(/[\t ]/), 1);
+const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
 const linebreak: parserfunc = multiple(match(/[\n\r]/), 1);
 

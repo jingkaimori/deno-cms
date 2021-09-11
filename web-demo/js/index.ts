@@ -1,11 +1,11 @@
-import { doc, postprocess } from "../../xwiki.ts";
-import { treeNode } from "../../macros.ts";
+import { doc, postprocess } from "../../parsers/xwiki.ts";
+import { treeNode } from "../../macros/macros.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
 
-let res = await fetch("./export/package.xml");
+const res = await fetch("./export/package.xml");
 const parser = new DOMParser();
-let tree = parser.parseFromString(await res.text(), "text/xml") as XMLDocument;
-let files = tree.querySelectorAll("package > files > *");
+const tree = parser.parseFromString(await res.text(), "text/xml") as XMLDocument;
+const files = tree.querySelectorAll("package > files > *");
 
 files.forEach((v) => {
   let li = document.createElement("li");
@@ -49,7 +49,7 @@ inputbox.forEach((v) => {
 
       console.log(rest)
       if(rest.length==0){
-
+        //all chars are used, no need to get rest chars
       }else{
         let splitstr = content.slice(0,content.indexOf(rest))
         let begini = splitstr.lastIndexOf("\n")

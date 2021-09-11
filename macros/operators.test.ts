@@ -1,17 +1,8 @@
 import { assertEquals } from "https://deno.land/std@0.90.0/testing/asserts.ts";
-import { eq, match, multiple, or, seq, symbol, treeNode } from "./macros.ts";
+import { multiple, or, seq, symbol } from "./operators.ts";
+import { eq } from "./primitives.ts";
+import { treeNode } from "./types.ts"
 
-Deno.test({
-  name: "eq() test",
-  fn(): void {
-    assertEquals(eq("=")("", new treeNode("root")), [false, ""]);
-    assertEquals(eq("=")("=====", new treeNode("root")), [
-      true,
-      "====",
-    ]);
-    assertEquals(eq("===")("=====", new treeNode("root")), [true, "=="]);
-  },
-});
 
 Deno.test({
   name: "multiple() test",
@@ -106,19 +97,6 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "match() test",
-  fn(): void {
-    assertEquals(match(/[0-9]/)("0", new treeNode("root")), [
-      true,
-      "",
-    ]);
-    assertEquals(match(/[0-9]/)("a", new treeNode("root")), [
-      false,
-      "a",
-    ]);
-  },
-});
 
 Deno.test({
   name: "seq() test",
