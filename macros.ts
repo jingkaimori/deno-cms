@@ -1,6 +1,6 @@
 type result = [boolean, string];
 export type parserfunc = (str: string, context: treeNode) => result;
-export type parservar<T> = T|((...args:any[])=>T)
+export type parservar<T> = T|((context: treeNode)=>T)
 export class treeNode {
   name: string;
   raw: string;
@@ -35,20 +35,24 @@ export class treeNode {
   }
 }
 
+export function consumedstr(str:string,newstr:string){
+  if (newstr.length > 0) {
+    return str.slice(0, str.indexOf(newstr));
+  } else {
+    return str;
+  }
+}
+
 export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
   return (str, context) => {
-    const namevalue=value(name);
+    const namevalue=value(name,context);
     let childsymbol = new treeNode(namevalue);
     context.appendchild(childsymbol);
     const [receive, laststr] = func(str, childsymbol);
     if (!receive) {
       context.removechild(childsymbol);
     } else {
-      if (laststr.length > 0) {
-        childsymbol.raw = str.slice(0, str.indexOf(laststr));
-      } else {
-        childsymbol.raw = str;
-      }
+      childsymbol.raw = consumedstr(str,laststr);
     }
     return [receive, laststr];
   };
@@ -66,9 +70,9 @@ export function multiple(
       times++;
       [receive, newstr] = func(newstr, context);
     } while (receive);
-    if (min && times < value(min)) {
+    if (min && times < value(min,context)) {
       return [false, str];
-    } else if (max && times >= value(max)) {
+    } else if (max && times >= value(max,context)) {
       return [false, str];
     } else {
       return [true, newstr];
@@ -102,9 +106,9 @@ export function seq(...functions: parserfunc[]): parserfunc {
   };
 }
 
-export function value<T>( variable :parservar<T>):T{
+export function value<T>( variable :parservar<T>,context: treeNode):T{
   if(variable instanceof Function){
-    return variable();
+    return variable(context);
   }else{
     return variable;
   }
@@ -112,7 +116,7 @@ export function value<T>( variable :parservar<T>):T{
 
 export function eq(expectedraw: parservar<string>): parserfunc {
   return (str, context) => {
-    const expected:string = value(expectedraw);
+    const expected:string = value(expectedraw,context);
     if (str.length > 0 && str.indexOf(expected) == 0) {
       return [true, str.slice(expected.length)];
     } else {
@@ -124,7 +128,7 @@ export function eq(expectedraw: parservar<string>): parserfunc {
 
 export function neq(expectedraw: parservar<string>): parserfunc {
   return (str, context) => {
-    const expected:string = value(expectedraw);
+    const expected:string = value(expectedraw,context);
     if (str.length > 0 && str.indexOf(expected) == 0) {
       return [false, str];
     } else {
@@ -135,7 +139,7 @@ export function neq(expectedraw: parservar<string>): parserfunc {
 
 export function match(patternraw: parservar<RegExp>): parserfunc {
   return (str, context) => {
-    const pattern = value(patternraw)
+    const pattern = value(patternraw,context)
     const res = str.match(pattern);
     if (str.length > 0 && res?.index === 0) {
       return [true, str.slice(res[0].length)];

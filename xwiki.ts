@@ -11,9 +11,9 @@ import {
 
 let whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
-let linebreak: parserfunc = multiple(match(/[\n\r]/), 1);
+const linebreak: parserfunc = multiple(match(/[\n\r]/), 1);
 
-export let title: parserfunc = symbol(function __title(str, context) {
+export const title: parserfunc = symbol(function __title(str, context) {
   return (seq(
     eq("="),
     or(__title, titletext),
@@ -21,7 +21,7 @@ export let title: parserfunc = symbol(function __title(str, context) {
   ))(str, context);
 }, "title");
 
-export let titletext: parserfunc = symbol(
+export const titletext: parserfunc = symbol(
   particleinmiddle(
     multiple(match(/[^\n\r=]/), 1),
     eq("="),
@@ -29,12 +29,12 @@ export let titletext: parserfunc = symbol(
   "titletext",
 );
 
-let path: parserfunc = symbol(
+const path: parserfunc = symbol(
   multiple(match(/[^\n\r\]>]/)),
   "__path",
 );
 
-let label: parserfunc = symbol(
+const label: parserfunc = symbol(
   multiple(match(/[^\n\r\]>]/)),
   "__label",
 );
@@ -43,7 +43,7 @@ let label: parserfunc = symbol(
 //   ,"macro"
 // )
 
-export let hyperlink: parserfunc = symbol(
+export const hyperlink: parserfunc = symbol(
   seq(
     eq("[["),
     label,
@@ -60,14 +60,14 @@ export let hyperlink: parserfunc = symbol(
   "hyperlink",
 );
 
-export let plainchar: parserfunc = match(/[^\n\r\[]/);
+export const plainchar: parserfunc = match(/[^\n\r\[]/);
 
-export let plain: parserfunc = symbol(
+export const plain: parserfunc = symbol(
   seq(multiple(match(/[\[]/)), multiple(plainchar, 1)),
   "__plain",
 );
 
-export let inline: parserfunc = symbol(
+export const inline: parserfunc = symbol(
   multiple(
     or(
       hyperlink,
@@ -78,12 +78,12 @@ export let inline: parserfunc = symbol(
   "text",
 );
 
-export let listitem: parserfunc = symbol(
+export const listitem: parserfunc = symbol(
   seq(multiple(match(/[*1;.:]/), 1), inline),
   "__listitem",
 );
 
-let horizonal = multiple(eq("-"), 4);
+const horizonal = multiple(eq("-"), 4);
 
 /**
  * match mode like `A(BA)*`
@@ -98,9 +98,9 @@ function particleinmiddle(
   return seq(beginend, multiple(seq(middle, beginend)));
 }
 
-let br = symbol(match(/[\n\r]/), "br");
+const br = symbol(match(/[\n\r]/), "br");
 
-let paragraph = symbol(
+const paragraph = symbol(
   or(
     particleinmiddle(listitem, match(/[\n\r]/)),
     particleinmiddle(inline, br),
@@ -108,9 +108,9 @@ let paragraph = symbol(
   "par",
 );
 
-let newline: parserfunc = or(title, horizonal, paragraph);
+const newline: parserfunc = or(title, horizonal, paragraph);
 
-export let doc: parserfunc = particleinmiddle(
+export const doc: parserfunc = particleinmiddle(
   newline,
   linebreak,
 );
