@@ -1,7 +1,11 @@
 import {
+  consumedstr,
   eq,
   match,
+  modifycontext,
   multiple,
+  neq,
+  not,
   or,
   parserfunc,
   seq,
@@ -38,10 +42,6 @@ const label: parserfunc = symbol(
   multiple(match(/[^\n\r\]>]/)),
   "__label",
 );
-
-// let xwikimacro:parserfunc = symbol(
-//   ,"macro"
-// )
 
 export const hyperlink: parserfunc = symbol(
   seq(
@@ -98,6 +98,66 @@ function particleinmiddle(
   return seq(beginend, multiple(seq(middle, beginend)));
 }
 
+/**
+ * @todo extract attribute
+ */
+const macroattr: parserfunc = seq(
+  whitespace,
+  multiple(not(or(eq("}}"), linebreak))),
+);
+
+/**
+ * change name of parent node to include template name
+ * @param func
+ * @returns
+ */
+const getmacroname = (str: string, laststr: string, context: treeNode) => {
+  const traw = consumedstr(str, laststr);
+  const res = traw.match(/^\{\{([^ }]*)/);
+  if (res) {
+    context.name = "template-" + res[1];
+  }
+};
+
+const macrobegin: parserfunc = modifycontext(
+  seq(
+    eq("{{"),
+    match(/^[^ {}\n]*/),
+    multiple(macroattr),
+    eq("}}"),
+  ),
+  getmacroname,
+);
+
+const macroend: parserfunc = seq(
+  eq("{{/"),
+  eq((context) => {
+    const res = context.name.match(/^template-(.*)/);
+    return res?.at(1) ?? "";
+  }),
+  eq("}}"),
+);
+
+const macrobody: parserfunc = symbol(
+  multiple(neq("{{")),
+  "__plain",
+);
+
+const macrowithoutbody: parserfunc = modifycontext(
+  seq(
+    eq("{{"),
+    match(/[0-9a-zA-Z]*/),
+    multiple(macroattr),
+    eq("/}}"),
+  ),
+  getmacroname,
+);
+
+const macroblock: parserfunc = symbol(
+  or(seq(macrobegin, macrobody, macroend)),
+  "template",
+);
+
 const br = symbol(match(/[\n\r]/), "br");
 
 const paragraph = symbol(
@@ -108,7 +168,13 @@ const paragraph = symbol(
   "par",
 );
 
-const newline: parserfunc = or(title, horizonal, paragraph);
+const newline: parserfunc = or(
+  title,
+  horizonal,
+  macroblock,
+  macrowithoutbody,
+  paragraph,
+);
 
 export const doc: parserfunc = particleinmiddle(
   newline,
@@ -127,7 +193,7 @@ export function postprocess(tree: treeNode) {
 }
 
 function listmerge(iptArr: treeNode[], level: number): [treeNode, number] {
-  let resTree = new treeNode(""); 
+  let resTree = new treeNode("");
   let skip: number = 0;
   let lastNode = new treeNode("item");
   for (let [i, item] of iptArr.entries()) {

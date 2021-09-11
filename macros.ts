@@ -80,6 +80,27 @@ export function multiple(
   };
 }
 
+export function not(func: parserfunc): parserfunc {
+  return (str, context) => {
+    const [receive,] = func(str, context);
+    if (receive) {
+      return [false, str];
+    } else {
+      return [true, str.slice(1)];
+    }
+  };
+}
+
+export function modifycontext(func:parserfunc,modifier:(str:string,laststr:string,context:treeNode)=>void):parserfunc{
+  return (str:string,context:treeNode)=>{
+    const [receive, laststr] = func(str, context);
+    if (receive)  {
+      modifier(str,laststr,context);
+    }
+    return [receive,laststr]
+  }
+}
+
 export function or(...functions: parserfunc[]): parserfunc {
   return (str, context) => {
     for (const func of functions) {
