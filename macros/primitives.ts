@@ -35,3 +35,11 @@ import { parserfunc, parservar, value } from "./types.ts"
       }
     };
   }
+
+  export const empty: parserfunc= function (str, _context){
+      if (str.length == 0 ) {
+        return [true, ""];
+      } else {
+        return [false, str];
+      }
+    };

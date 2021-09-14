@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.90.0/testing/asserts.ts";
-import { eq,match } from "./primitives.ts";
+import { empty, eq,match } from "./primitives.ts";
 import { treeNode } from "./types.ts"
 
 
@@ -29,3 +29,14 @@ Deno.test({
       assertEquals(eq("===")("=====", new treeNode("root")), [true, "=="]);
     },
   });
+  
+Deno.test({
+  name: "empty() test",
+  fn(): void {
+    assertEquals(empty("", new treeNode("root")), [true, ""]);
+    assertEquals(empty("=====", new treeNode("root")), [
+      false,
+      "=====",
+    ]);
+  },
+});
