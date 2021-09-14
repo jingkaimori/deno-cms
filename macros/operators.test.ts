@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.90.0/testing/asserts.ts";
-import { multiple, or, seq, symbol } from "./operators.ts";
+import { multiple, not, or, seq, symbol } from "./operators.ts";
 import { eq } from "./primitives.ts";
 import { treeNode } from "./types.ts"
 
@@ -94,9 +94,64 @@ Deno.test({
       ),
       [true, "=|||"],
     );
+    assertEquals(
+      or(eq("||||"), eq("=||"))(
+        "|||",
+        new treeNode("root"),
+      ),
+      [false, "|||"],
+    );
   },
 });
 
+Deno.test({
+  name: "not() test",
+  fn(): void {
+    assertEquals(
+      not(eq("="))(
+        "|",
+        new treeNode("root"),
+      ),
+      [true, ""],
+    );
+    assertEquals(
+      not(eq("|"))(
+        "|",
+        new treeNode("root"),
+      ),
+      [false, "|"],
+    );
+    assertEquals(
+      not(eq("|"))(
+        "",
+        new treeNode("root"),
+      ),
+      [true, ""],
+    );
+
+    assertEquals(
+      not(or(eq("="), eq("|")))(
+        "+",
+        new treeNode("root"),
+      ),
+      [true, ""],
+    );
+    assertEquals(
+      not(or(eq("|"), eq("=")))(
+        "|",
+        new treeNode("root"),
+      ),
+      [false, "|"],
+    );
+    assertEquals(
+      not(eq("||||"))(
+        "|||",
+        new treeNode("root"),
+      ),
+      [true, "||"],
+    );
+  },
+});
 
 Deno.test({
   name: "seq() test",
@@ -119,6 +174,23 @@ Deno.test({
       true,
       "=",
     ]);
+    assertEquals(parserfunction("=a==a=",new treeNode("root")), [
+      true,
+      "=a=",
+    ]);
+
+    assertEquals(seq(
+      multiple(eq("a")),
+    )("aa=",new treeNode("root")), [
+      true,
+      "=",
+    ])
+    assertEquals(seq(
+      multiple(eq("")),
+    )("",new treeNode("root")), [
+      true,
+      "",
+    ])
   },
 });
 
