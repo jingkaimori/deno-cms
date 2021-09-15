@@ -7,9 +7,11 @@ import {
   not,
   or,
   parserfunc,
+  parservar,
   seq,
   symbol,
   treeNode,
+value,
 } from "../macros/macros.ts";
 
 const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
@@ -65,11 +67,6 @@ const escapetext: parserfunc = symbol(multiple(neq("}}}")), "__plain");
 const escape: parserfunc = symbol(
   seq(eq("{{{"), escapetext, eq("}}}")),
   "rawtext",
-);
-
-export const plain: parserfunc = symbol(
-  multiple(not(or(hyperlink, escape, linebreak, empty)), 1),
-  "__plain",
 );
 
 const horizonal = multiple(eq("-"), 4);
@@ -133,10 +130,26 @@ const macroblock: parserfunc = symbol(
   "template",
 );
 
+const macroinlinebody: parserfunc = symbol(
+  multiple(not(or(eq("{{"),eq("\n"),empty))),
+  "__plain",
+);
+
+const macroinline: parserfunc = symbol(
+  seq(macrobegin, macroinlinebody, macroend),
+  "template",
+);
+
+export const plain: parserfunc = symbol(
+  multiple(not(or(hyperlink, escape,macrobegin, linebreak, empty)), 1),
+  "__plain",
+);
+
 export const inline: parserfunc = symbol(
   multiple(
     or(
       hyperlink,
+      macroinline,
       macrowithoutbody,
       plain,
     ),

@@ -32,7 +32,14 @@ export class treeNode {
     }
   }
   toString(): string {
-    return JSON.stringify(this);
+    return JSON.stringify(this,["name","raw","childs"]);
+  }
+  clone():treeNode {
+    let retval = new treeNode(this.name);
+    retval.raw = this.raw;
+    retval.parent = this.parent;
+    retval.childs = Array.from(this.childs)
+    return retval;
   }
 }
 

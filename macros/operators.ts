@@ -52,7 +52,7 @@ export function multiple(
 
 export function not(func: parserfunc): parserfunc {
   return (str, context) => {
-    const [receive,] = func(str, context);
+    const [receive,] = func(str, context.clone());
     if (receive) {
       return [false, str];
     } else {
