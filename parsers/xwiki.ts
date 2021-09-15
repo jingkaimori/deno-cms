@@ -1,8 +1,7 @@
 import {
-  consumedstr,
+  empty,
   eq,
   match,
-  modifycontext,
   multiple,
   neq,
   not,
@@ -62,25 +61,15 @@ export const hyperlink: parserfunc = symbol(
 
 export const plainchar: parserfunc = match(/[^\n\r\[]/);
 
+const escapetext: parserfunc = symbol(multiple(neq("}}}")), "__plain");
+const escape: parserfunc = symbol(
+  seq(eq("{{{"), escapetext, eq("}}}")),
+  "rawtext",
+);
+
 export const plain: parserfunc = symbol(
-  seq(multiple(match(/[\[]/)), multiple(plainchar, 1)),
+  multiple(not(or(hyperlink, escape, linebreak, empty)), 1),
   "__plain",
-);
-
-export const inline: parserfunc = symbol(
-  multiple(
-    or(
-      hyperlink,
-      plain,
-    ),
-    1,
-  ),
-  "text",
-);
-
-export const listitem: parserfunc = symbol(
-  seq(multiple(match(/[*1;.:]/), 1), inline),
-  "__listitem",
 );
 
 const horizonal = multiple(eq("-"), 4);
@@ -103,37 +92,23 @@ function particleinmiddle(
  */
 const macroattr: parserfunc = seq(
   whitespace,
-  multiple(not(or(eq("}}"),eq("/}}"), linebreak))),
+  multiple(not(or(eq("}}"), eq("/}}"), linebreak, empty))),
 );
 
-/**
- * change name of parent node to include template name
- * @param func
- * @returns
- */
-const getmacroname = (str: string, laststr: string, context: treeNode) => {
-  const traw = consumedstr(str, laststr);
-  const res = traw.match(/^\{\{([^ }]*)/);
-  if (res) {
-    context.name = "template-" + res[1];
-  }
-};
+const macroname: parserfunc = symbol(match(/^[^ {}\n]*/), "__name");
 
-const macrobegin: parserfunc = modifycontext(
-  seq(
-    eq("{{"),
-    match(/^[^ {}\n]*/),
-    multiple(macroattr),
-    eq("}}"),
-  ),
-  getmacroname,
+const macrobegin: parserfunc = seq(
+  eq("{{"),
+  macroname,
+  multiple(macroattr),
+  eq("}}"),
 );
 
 const macroend: parserfunc = seq(
   eq("{{/"),
   eq((context) => {
-    const res = context.name.match(/^template-(.*)/);
-    return res?.at(1) ?? "";
+    const namenode = context.childs.find((v) => (v.name == "__name"));
+    return namenode?.raw ?? "";
   }),
   eq("}}"),
 );
@@ -144,27 +119,35 @@ const macrobody: parserfunc = symbol(
 );
 
 const macrowithoutbody: parserfunc = symbol(
-  modifycontext(
-    seq(
-      eq("{{"),
-      match(/[^ /{}\n]*/),
-      multiple(macroattr),
-      eq("/}}"),
-    ),
-    getmacroname,
+  seq(
+    eq("{{"),
+    macroname,
+    multiple(macroattr),
+    eq("/}}"),
   ),
   "template",
 );
 
 const macroblock: parserfunc = symbol(
-  or(seq(macrobegin, macrobody, macroend)),
+  seq(macrobegin, macrobody, macroend),
   "template",
 );
 
-const escapetext: parserfunc = symbol(multiple(neq("}}}")), "__plain");
-const escape: parserfunc = symbol(
-  seq(eq("{{{"), escapetext, eq("}}}")),
-  "rawtext",
+export const inline: parserfunc = symbol(
+  multiple(
+    or(
+      hyperlink,
+      macrowithoutbody,
+      plain,
+    ),
+    1,
+  ),
+  "text",
+);
+
+export const listitem: parserfunc = symbol(
+  seq(multiple(match(/[*1;.:]/), 1), inline),
+  "__listitem",
 );
 
 const br = symbol(match(/[\n\r]/), "br");
