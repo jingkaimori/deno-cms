@@ -1,5 +1,13 @@
 import { parserfunc, parservar, treeNode, value } from "./types.ts"
 import { consumedstr } from "./utility.ts";
+/**
+ * this variable turn on such checks
+ * - left recurse
+ */
+const safemode = true;
+const msg = {
+  leftrecurse : "multiple match found too many empty match, are there some bug?"
+}
 
 export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
   return (str, context) => {
@@ -21,19 +29,23 @@ export function multiple(
   min?: parservar<number>,
   max?: parservar<number>,
 ): parserfunc {
-  return (str, context) => {
+  return (originstr, context) => {
     let times = -1;
-    let receive = true, newstr = str;
+    let receive = true, loopstr = originstr;
     do {
       times++;
-      [receive, newstr] = func(newstr, context);
+      const laststr = loopstr;
+      [receive, loopstr] = func(loopstr, context);
+      if(laststr == loopstr&&receive&&safemode){
+        throw new Error(msg.leftrecurse)
+      }
     } while (receive);
     if (min && times < value(min,context)) {
-      return [false, str];
+      return [false, originstr];
     } else if (max && times >= value(max,context)) {
-      return [false, str];
+      return [false, originstr];
     } else {
-      return [true, newstr];
+      return [true, loopstr];
     }
   };
 }
@@ -49,6 +61,15 @@ export function not(func: parserfunc): parserfunc {
   };
 }
 
+/**
+ * this func is deprecated due to inrevertable change to nodes
+ * image that this func modify content in grandparent, but parent is rejected, so parent is removed but modification for grandparent is kept.
+ * function should only modify its current treeNode, getters is responsible to grab info from slibings
+ * @deprecated
+ * @param func 
+ * @param modifier 
+ * @returns 
+ */
 export function modifycontext(func:parserfunc,modifier:(str:string,laststr:string,context:treeNode)=>void):parserfunc{
   return (str:string,context:treeNode)=>{
     const [receive, laststr] = func(str, context);
@@ -60,6 +81,7 @@ export function modifycontext(func:parserfunc,modifier:(str:string,laststr:strin
 }
 
 export function or(...functions: parserfunc[]): parserfunc {
+   __warnSubparserNums(or,...functions)
   return (str, context) => {
     for (const func of functions) {
       const [receive, next] = func(str, context);
@@ -72,6 +94,7 @@ export function or(...functions: parserfunc[]): parserfunc {
 }
 
 export function seq(...functions: parserfunc[]): parserfunc {
+   __warnSubparserNums(seq,...functions);
   return (str, context) => {
     let receive = true, newstr = str;
     for (const func of functions) {
@@ -86,3 +109,13 @@ export function seq(...functions: parserfunc[]): parserfunc {
   };
 }
 
+
+/**
+ * not recommend to use out of macro meta defs
+ * @param functions 
+ */
+ function  __warnSubparserNums(context:Function,...functions: parserfunc[]): void {
+  if(functions.length<2){
+    console.warn(context.name + "has less than two sub-parsers. maybe this is an error.")
+  }
+}

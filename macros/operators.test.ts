@@ -1,6 +1,6 @@
-import { assertEquals } from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { assertEquals,assertThrows,assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
 import { multiple, not, or, seq, symbol } from "./operators.ts";
-import { eq } from "./primitives.ts";
+import { empty, eq } from "./primitives.ts";
 import { treeNode } from "./types.ts"
 
 
@@ -28,22 +28,27 @@ Deno.test({
     );
     assertEquals(
       multiple(eq("="), 6)("=====", new treeNode("root")),
-      [false, ""],
+      [false, "====="],
     );
     assertEquals(
       multiple(eq("="), 0, 4)(
         "=====",
         new treeNode("root"),
       ),
-      [false, ""],
+      [false, "====="],
     );
     assertEquals(
       multiple(eq("="), 1, 1)(
         "=",
         new treeNode("root"),
       ),
-      [false, ""],
+      [false, "="],
     );
+
+    assertThrows(()=>multiple(empty)(
+      "",
+      new treeNode("root"),
+    ),Error,"empty match")
   },
 });
 
