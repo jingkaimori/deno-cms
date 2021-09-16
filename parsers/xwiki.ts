@@ -92,7 +92,7 @@ const macroattr: parserfunc = seq(
   multiple(not(or(eq("}}"), eq("/}}"), linebreak, empty))),
 );
 
-const macroname: parserfunc = symbol(match(/^[^ {}\n]*/), "__name");
+const macroname: parserfunc = symbol(match(/^[^ \/{}\n]*/), "__name");
 
 const macrobegin: parserfunc = seq(
   eq("{{"),
@@ -115,7 +115,7 @@ const macrobody: parserfunc = symbol(
   "__plain",
 );
 
-const macrowithoutbody: parserfunc = symbol(
+export const macrowithoutbody: parserfunc = symbol(
   seq(
     eq("{{"),
     macroname,
@@ -163,11 +163,61 @@ export const listitem: parserfunc = symbol(
   "__listitem",
 );
 
+export const followedlist: parserfunc = symbol(
+  seq(
+    match(/[\n\r]/),
+    (s, context) => {
+      const namenode = context?.parent?.childs.at(0)?.childs
+        .find((v) => (v.name == "__delim"));
+      const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
+      console.log("follow",(depth ?? 1),namenode?.raw);
+      let lthval = depth ?? 1;
+      let newlth = lthval + 1;
+      return symbol(
+        multiple(match(/(\*\.|\*|1\.|1|;|:)/), lthval, newlth),
+        "__delim",
+      )(s, context);
+    },
+    inline,
+  ),
+  "__listitemnew",
+);
+
+export const listitemnew: parserfunc = symbol(
+  seq(
+    symbol(
+      multiple(match(/(\*\.|\*|1\.|1|;|:)/),(context) => {
+        const namenode = context?.parent?.parent?.parent?.
+          childs.at(0)?.childs.find((v) => (v.name == "__delim"));
+        const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
+        console.log("list",(depth ?? 0)+1,depth);
+        return (depth ?? 0)+1;
+      }),
+      "__delim",
+    ),
+    inline,
+  ),
+  "__listitemnew",
+);
+
+export const list: parserfunc = function __list(str, context) {
+  console.log(str)
+  const cascadedlist = multiple(seq(match(/[\n\r]/), __list), 0, 2);
+  return symbol(
+    seq(
+      listitemnew,
+      cascadedlist,
+      multiple(seq(followedlist, cascadedlist)),
+    ),
+    "__list",
+  )(str, context);
+};
+
 const br = symbol(match(/[\n\r]/), "br");
 
 const paragraph = symbol(
   or(
-    particleinmiddle(listitem, match(/[\n\r]/)),
+    list,
     particleinmiddle(inline, br),
   ),
   "par",
@@ -191,6 +241,52 @@ export function postprocess(tree: treeNode) {
   if (tree.childs.length > 0 && tree.childs[0].name == "__listitem") {
     let [restree] = listmerge(tree.childs, 1);
     tree.childs = [restree];
+  }else if( tree.name == "__list"){
+    const delimnode = tree.childs.at(0)?.childs.find((v) => (v.name == "__delim"))
+    const match = delimnode?.raw.match(/(\*|1.|;|:)$/)?.at(0);
+    switch (match) {
+      case "*":
+        tree.name = "ulist";
+        break;
+      case "1.":
+        tree.name = "olist";
+        break;
+      case ";":
+      case ":":
+        tree.name = "dlist";
+        break;
+      default:
+        tree.name = "list";
+        break;
+    }
+    for (let i of tree.childs) {
+      postprocess(i);
+    }
+
+  }else if( tree.name == "__listitemnew"){
+    const delimnode = tree.childs.find((v) => (v.name == "__delim"))
+    const match = delimnode?.raw.match(/(\*|1.|;|:)$/)?.at(0);
+    switch (match) {
+      case "*":
+      case "1":
+        tree.name = "item";
+        break;
+      case ";":
+        tree.name = "dt";
+        break;
+      case ":":
+        tree.name = "dd";
+        break;
+      default:
+        tree.name = "item";
+        break;
+    }
+    if(delimnode){
+      tree.removechild(delimnode)
+    }
+    for (let i of tree.childs) {
+      postprocess(i);
+    }
   } else {
     for (let i of tree.childs) {
       postprocess(i);
