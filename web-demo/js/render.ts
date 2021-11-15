@@ -1,5 +1,6 @@
 import { treeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
+import katex from "https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.mjs";
 type contextType = Record<string, any>;
 
 type processer = (
@@ -31,10 +32,18 @@ const mappers = new Processors<processer>({
   "dt": mapToNode("dt"),
   "dd": mapToNode("dd"),
   "br": mapToNode("br"),
+  "template": mapToNode("box"),
   "template-warning": mapToNode("warning"),
   "template-code": mapToNode("code"),
   "template-cite": mapToNode("cite"),
   "template-toc": mapToNode("toc"),
+  "template-formula": (tree, output, context) => {
+    let title = document.createElement("formula");
+    let math = katex.__parse(tree.childs[0]?.raw,{});
+    console.log(math);
+    output.append(title);
+    return [title];
+  },
   "__label": mapToText(),
   "__path": function (tree, output, context) {
     if (/^url:(.*)/.test(tree.raw)) {

@@ -170,7 +170,6 @@ export const followedlist: parserfunc = symbol(
       const namenode = context?.parent?.childs.at(0)?.childs
         .find((v) => (v.name == "__delim"));
       const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
-      console.log("follow",(depth ?? 1),namenode?.raw);
       let lthval = depth ?? 1;
       let newlth = lthval + 1;
       return symbol(
@@ -190,7 +189,6 @@ export const listitemnew: parserfunc = symbol(
         const namenode = context?.parent?.parent?.parent?.
           childs.at(0)?.childs.find((v) => (v.name == "__delim"));
         const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
-        console.log("list",(depth ?? 0)+1,depth);
         return (depth ?? 0)+1;
       }),
       "__delim",
@@ -201,7 +199,6 @@ export const listitemnew: parserfunc = symbol(
 );
 
 export const list: parserfunc = function __list(str, context) {
-  console.log(str)
   const cascadedlist = multiple(seq(match(/[\n\r]/), __list), 0, 2);
   return symbol(
     seq(
@@ -243,9 +240,10 @@ export function postprocess(tree: treeNode) {
     tree.childs = [restree];
   }else if( tree.name == "__list"){
     const delimnode = tree.childs.at(0)?.childs.find((v) => (v.name == "__delim"))
-    const match = delimnode?.raw.match(/(\*|1.|;|:)$/)?.at(0);
+    const match = delimnode?.raw.match(/(\*\.|\*|1.|;|:)$/)?.at(0);
     switch (match) {
       case "*":
+      case "*.":
         tree.name = "ulist";
         break;
       case "1.":
@@ -265,10 +263,12 @@ export function postprocess(tree: treeNode) {
 
   }else if( tree.name == "__listitemnew"){
     const delimnode = tree.childs.find((v) => (v.name == "__delim"))
-    const match = delimnode?.raw.match(/(\*|1.|;|:)$/)?.at(0);
+    const match = delimnode?.raw.match(/(\*\.|\*|1.|;|:)$/)?.at(0);
     switch (match) {
       case "*":
+      case "*.":
       case "1":
+      case "1.":
         tree.name = "item";
         break;
       case ";":
@@ -278,6 +278,7 @@ export function postprocess(tree: treeNode) {
         tree.name = "dd";
         break;
       default:
+        console.log(delimnode?.raw)
         tree.name = "item";
         break;
     }

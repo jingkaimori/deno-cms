@@ -9,6 +9,29 @@ const msg = {
   leftrecurse : "multiple match found too many empty match, are there some bug?"
 }
 
+/**
+ * manually guard that left 
+ * some CSG will left recursive finite times
+ * @param func 
+ * @todo change parserfunc def to include func stack.
+ */
+export function guard(func: parserfunc):parserfunc {
+  return (str, context ) => {
+    if(safemode){
+      throw new Error("function not implemented")
+      // let caller = guard.caller;
+      // while(caller){
+      //   if(caller==func && caller.arguments[0] == func.arguments[0]){
+      //     throw new Error(msg.leftrecurse)
+      //   }
+      //   caller = caller.caller;
+      // }
+
+    }
+    return func(str,context);
+  }
+}
+
 export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
   return (str, context) => {
     const namevalue=value(name,context);

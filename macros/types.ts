@@ -31,11 +31,11 @@ export class treeNode {
       this.childs = this.childs.filter((cur) => cur !== child);
     }
   }
-  toString(): string {
-    return JSON.stringify(this,["name","raw","childs"]);
+  toString(space ?: string|number ): string {
+    return JSON.stringify(this,["name","raw","childs"],space);
   }
   clone():treeNode {
-    let retval = new treeNode(this.name);
+    const retval = new treeNode(this.name);
     retval.raw = this.raw;
     retval.parent = this.parent;
     retval.childs = Array.from(this.childs)
