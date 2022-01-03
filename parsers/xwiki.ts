@@ -18,12 +18,12 @@ const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
 const linebreak: parserfunc = multiple(match(/[\n\r]/), 1);
 
-export const title: parserfunc = symbol(function __title(str, context) {
+export const title: parserfunc = symbol(function __title(str, context, stack) {
   return (seq(
     eq("="),
     or(__title, titletext),
     eq("="),
-  ))(str, context);
+  ))(str, context, stack);
 }, "title");
 
 export const titletext: parserfunc = symbol(
@@ -166,7 +166,7 @@ export const listitem: parserfunc = symbol(
 export const followedlist: parserfunc = symbol(
   seq(
     match(/[\n\r]/),
-    (s, context) => {
+    (s, context, stack) => {
       const namenode = context?.parent?.childs.at(0)?.childs
         .find((v) => (v.name == "__delim"));
       const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
@@ -175,7 +175,7 @@ export const followedlist: parserfunc = symbol(
       return symbol(
         multiple(match(/(\*\.|\*|1\.|1|;|:)/), lthval, newlth),
         "__delim",
-      )(s, context);
+      )(s, context, stack);
     },
     inline,
   ),
@@ -198,7 +198,7 @@ export const listitemnew: parserfunc = symbol(
   "__listitemnew",
 );
 
-export const list: parserfunc = function __list(str, context) {
+export const list: parserfunc = function __list(str, context, stack) {
   const cascadedlist = multiple(seq(match(/[\n\r]/), __list), 0, 2);
   return symbol(
     seq(
@@ -207,7 +207,7 @@ export const list: parserfunc = function __list(str, context) {
       multiple(seq(followedlist, cascadedlist)),
     ),
     "__list",
-  )(str, context);
+  )(str, context, stack);
 };
 
 const br = symbol(match(/[\n\r]/), "br");

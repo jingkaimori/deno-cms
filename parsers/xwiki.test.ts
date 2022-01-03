@@ -7,9 +7,9 @@ Deno.test({
   name: "title() test",
   fn(): void {
     let ALT1 = new treeNode("root");
-    let res = title("=== title ===", ALT1);
+    let res = title("=== title ===", ALT1,[]);
     assertEquals(res, [true, ""]);
-    assertEquals(title("=== title ==", new treeNode("root")), [
+    assertEquals(title("=== title ==", new treeNode("root"),[]), [
       false,
       "=== title ==",
     ]);
@@ -18,15 +18,15 @@ Deno.test({
 Deno.test({
   name: "titletext() test",
   fn(): void {
-    assertEquals(titletext(" title ", new treeNode("root")), [
+    assertEquals(titletext(" title ", new treeNode("root"),[]), [
       true,
       "",
     ]);
-    assertEquals(titletext(" title =", new treeNode("root")), [
+    assertEquals(titletext(" title =", new treeNode("root"),[]), [
       true,
       "=",
     ]);
-    assertEquals(titletext("= title ", new treeNode("root")), [
+    assertEquals(titletext("= title ", new treeNode("root"),[]), [
       false,
       "= title ",
     ]);
@@ -36,7 +36,7 @@ Deno.test({
 Deno.test({
   name: "hyperlink() test",
   fn(): void {
-    assertEquals(hyperlink("[[ title >> url]]", new treeNode("root")), [
+    assertEquals(hyperlink("[[ title >> url]]", new treeNode("root"),[]), [
       true,
       "",
     ]);
@@ -48,7 +48,7 @@ Deno.test({
   name: "list() test",
   fn(): void {
     let ALT1 = new treeNode("root")
-    seq(match(/[\n\r]/), list)("\n** ca",ALT1)
+    seq(match(/[\n\r]/), list)("\n** ca",ALT1,[])
     console.log(ALT1.toString())
     ALT1 = new treeNode("root")
     assertEquals(list(
@@ -60,7 +60,7 @@ Deno.test({
 *** cca\n\
 * c\n\
 * c\n",
-      ALT1), [
+      ALT1,[]), [
       true,
       "\n",
     ]);
@@ -78,7 +78,7 @@ Deno.test({
 11. 先用一块木头斧子左键敲击一方块设置点A，右键敲击一方块设置点B（可以输入{{code}}/res select size{{/code}}查看所选区域的大小）；\n\
 11. 之后输入{{code}}/res create 123{{/code}}（例）\n\
 11. 这样设置后，就形成了[以AB连线为体对角线的长方体的][名为123的]领地（包括A、B所在边），设置领地需要金钱\n",
-      ALT1), [
+      ALT1,[]), [
       true,
       "\n",
     ]);
@@ -93,7 +93,7 @@ Deno.test({
     console.log("{{toc/}}")
     assertEquals(macrowithoutbody(
       "{{toc/}}",
-      ALT1), [
+      ALT1,[]), [
       true,
       "",
     ]);

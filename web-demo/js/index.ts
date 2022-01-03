@@ -32,7 +32,7 @@ inputbox.forEach((v) => {
         xmltree.querySelector("xwikidoc > content")?.firstChild?.nodeValue,
       );
       let tree = new treeNode("root");
-      let [res,rest] = doc(content, tree);
+      let [res,rest] = doc(content, tree, []);
       postprocess(tree);
 
       let statElem=

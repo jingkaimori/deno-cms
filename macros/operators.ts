@@ -13,31 +13,32 @@ const msg = {
  * manually guard that left 
  * some CSG will left recursive finite times
  * @param func 
- * @todo change parserfunc def to include func stack.
+ * @param label display label for this guard def
  */
-export function guard(func: parserfunc):parserfunc {
-  return (str, context ) => {
+export function guard(func: parserfunc,label: string):parserfunc {
+  let wrapfunc:parserfunc = (str, context, stack) => {
     if(safemode){
-      throw new Error("function not implemented")
-      // let caller = guard.caller;
-      // while(caller){
-      //   if(caller==func && caller.arguments[0] == func.arguments[0]){
-      //     throw new Error(msg.leftrecurse)
-      //   }
-      //   caller = caller.caller;
-      // }
-
+        let labelres = stack.find((v)=>v.func==wrapfunc);
+        if(labelres === undefined){
+          throw new Error(msg.leftrecurse)
+        }
+        stack.push({label:label,func:wrapfunc});
+        let res = func(str,context,stack);
+        stack.pop();
+        return res;
+    }else{
+      return func(str,context,stack);
     }
-    return func(str,context);
   }
+  return wrapfunc;
 }
 
 export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
-  return (str, context) => {
+  return (str, context, stack) => {
     const namevalue=value(name,context);
     const childsymbol = new treeNode(namevalue);
     context.appendchild(childsymbol);
-    const [receive, laststr] = func(str, childsymbol);
+    const [receive, laststr] = func(str, childsymbol,stack);
     if (!receive) {
       context.removechild(childsymbol);
     } else {
@@ -52,13 +53,13 @@ export function multiple(
   min?: parservar<number>,
   max?: parservar<number>,
 ): parserfunc {
-  return (originstr, context) => {
+  return (originstr, context, stack) => {
     let times = -1;
     let receive = true, loopstr = originstr;
     do {
       times++;
       const laststr = loopstr;
-      [receive, loopstr] = func(loopstr, context);
+      [receive, loopstr] = func(loopstr, context, stack);
       if(laststr == loopstr&&receive&&safemode){
         throw new Error(msg.leftrecurse)
       }
@@ -74,8 +75,8 @@ export function multiple(
 }
 
 export function not(func: parserfunc): parserfunc {
-  return (str, context) => {
-    const [receive,] = func(str, context.clone());
+  return (str, context, stack) => {
+    const [receive,] = func(str, context.clone(),stack);
     if (receive) {
       return [false, str];
     } else {
@@ -94,8 +95,8 @@ export function not(func: parserfunc): parserfunc {
  * @returns 
  */
 export function modifycontext(func:parserfunc,modifier:(str:string,laststr:string,context:treeNode)=>void):parserfunc{
-  return (str:string,context:treeNode)=>{
-    const [receive, laststr] = func(str, context);
+  return (str:string,context:treeNode,stack)=>{
+    const [receive, laststr] = func(str, context,stack);
     if (receive)  {
       modifier(str,laststr,context);
     }
@@ -105,9 +106,9 @@ export function modifycontext(func:parserfunc,modifier:(str:string,laststr:strin
 
 export function or(...functions: parserfunc[]): parserfunc {
    __warnSubparserNums(or,...functions)
-  return (str, context) => {
+  return (str, context, stack) => {
     for (const func of functions) {
-      const [receive, next] = func(str, context);
+      const [receive, next] = func(str, context, stack);
       if (receive) {
         return [true, next];
       }
@@ -118,10 +119,10 @@ export function or(...functions: parserfunc[]): parserfunc {
 
 export function seq(...functions: parserfunc[]): parserfunc {
    __warnSubparserNums(seq,...functions);
-  return (str, context) => {
+  return (str, context, stack) => {
     let receive = true, newstr = str;
     for (const func of functions) {
-      [receive, newstr] = func(newstr, context);
+      [receive, newstr] = func(newstr, context, stack);
       if (receive) {
         //continue loop
       } else {

@@ -8,32 +8,34 @@ Deno.test({
   name: "multiple() test",
   fn(): void {
     assertEquals(
-      multiple(eq("="))("", new treeNode("root")),
+      multiple(eq("="))("", new treeNode("root"),[]),
       [true, ""],
     );
     assertEquals(
-      multiple(eq("="))("=====", new treeNode("root")),
+      multiple(eq("="))("=====", new treeNode("root"),[]),
       [true, ""],
     );
     assertEquals(
-      multiple(eq("="))("=====+", new treeNode("root")),
+      multiple(eq("="))("=====+", new treeNode("root"),[]),
       [true, "+"],
     );
     assertEquals(
       multiple(eq("="), 1)(
         "+=====+",
         new treeNode("root"),
+        [],
       ),
       [false, "+=====+"],
     );
     assertEquals(
-      multiple(eq("="), 6)("=====", new treeNode("root")),
+      multiple(eq("="), 6)("=====", new treeNode("root"),[]),
       [false, "====="],
     );
     assertEquals(
       multiple(eq("="), 0, 4)(
         "=====",
         new treeNode("root"),
+        [],
       ),
       [false, "====="],
     );
@@ -41,6 +43,7 @@ Deno.test({
       multiple(eq("="), 1, 1)(
         "=",
         new treeNode("root"),
+        [],
       ),
       [false, "="],
     );
@@ -48,6 +51,7 @@ Deno.test({
     assertThrows(()=>multiple(empty)(
       "",
       new treeNode("root"),
+      [],
     ),Error,"empty match")
   },
 });
@@ -59,6 +63,7 @@ Deno.test({
       or(eq("="), eq("|"))(
         "|",
         new treeNode("root"),
+        [],
       ),
       [true, ""],
     );
@@ -66,6 +71,7 @@ Deno.test({
       or(eq("|"), eq("="))(
         "|",
         new treeNode("root"),
+        [],
       ),
       [true, ""],
     );
@@ -74,6 +80,7 @@ Deno.test({
       or(eq("="), eq("|"))(
         "+",
         new treeNode("root"),
+        [],
       ),
       [false, "+"],
     );
@@ -81,6 +88,7 @@ Deno.test({
       or(eq("|"), eq("="))(
         "+",
         new treeNode("root"),
+        [],
       ),
       [false, "+"],
     );
@@ -89,6 +97,7 @@ Deno.test({
       or(eq("="), eq("|"))(
         "|=|||",
         new treeNode("root"),
+        [],
       ),
       [true, "=|||"],
     );
@@ -96,6 +105,7 @@ Deno.test({
       or(eq("|"), eq("="))(
         "|=|||",
         new treeNode("root"),
+        [],
       ),
       [true, "=|||"],
     );
@@ -103,6 +113,7 @@ Deno.test({
       or(eq("||||"), eq("=||"))(
         "|||",
         new treeNode("root"),
+        [],
       ),
       [false, "|||"],
     );
@@ -116,6 +127,7 @@ Deno.test({
       not(eq("="))(
         "|",
         new treeNode("root"),
+        [],
       ),
       [true, ""],
     );
@@ -123,6 +135,7 @@ Deno.test({
       not(eq("|"))(
         "|",
         new treeNode("root"),
+        [],
       ),
       [false, "|"],
     );
@@ -130,6 +143,7 @@ Deno.test({
       not(eq("|"))(
         "",
         new treeNode("root"),
+        [],
       ),
       [true, ""],
     );
@@ -138,6 +152,7 @@ Deno.test({
       not(or(eq("="), eq("|")))(
         "+",
         new treeNode("root"),
+        [],
       ),
       [true, ""],
     );
@@ -145,6 +160,7 @@ Deno.test({
       not(or(eq("|"), eq("=")))(
         "|",
         new treeNode("root"),
+        [],
       ),
       [false, "|"],
     );
@@ -152,6 +168,7 @@ Deno.test({
       not(eq("||||"))(
         "|||",
         new treeNode("root"),
+        [],
       ),
       [true, "||"],
     );
@@ -166,33 +183,33 @@ Deno.test({
       multiple(eq("a")),
       eq("="),
     );
-    assertEquals(parserfunction("=a=", new treeNode("root")), [
+    assertEquals(parserfunction("=a=", new treeNode("root"),[]), [
       true,
       "",
     ]);
-    assertEquals(parserfunction("=aba=", new treeNode("root")), [
+    assertEquals(parserfunction("=aba=", new treeNode("root"),[]), [
       false,
       "=aba=",
     ]);
-    assertEquals(parserfunction("==", new treeNode("root")), [true, ""]);
-    assertEquals(parserfunction("===", new treeNode("root")), [
+    assertEquals(parserfunction("==", new treeNode("root"),[]), [true, ""]);
+    assertEquals(parserfunction("===", new treeNode("root"),[]), [
       true,
       "=",
     ]);
-    assertEquals(parserfunction("=a==a=",new treeNode("root")), [
+    assertEquals(parserfunction("=a==a=",new treeNode("root"),[]), [
       true,
       "=a=",
     ]);
 
     assertEquals(seq(
       multiple(eq("a")),
-    )("aa=",new treeNode("root")), [
+    )("aa=",new treeNode("root"),[]), [
       true,
       "=",
     ])
     assertEquals(seq(
       multiple(eq("")),
-    )("",new treeNode("root")), [
+    )("",new treeNode("root"),[]), [
       true,
       "",
     ])
@@ -208,7 +225,7 @@ Deno.test({
       eq("="),
     );
     let ALT = new treeNode("root");
-    assertEquals(parserfunction("=abcd=", ALT), [true, ""]);
+    assertEquals(parserfunction("=abcd=", ALT,[]), [true, ""]);
     assertEquals(ALT.childs[0].raw, "abcd");
     assertEquals(ALT.childs[0].name, "title");
   },
@@ -223,7 +240,7 @@ Deno.test({
       eq("="),
     );
     let ALT = new treeNode("root");
-    assertEquals(parserfunction("=abcd=", ALT), [true, ""]);
+    assertEquals(parserfunction("=abcd=", ALT,[]), [true, ""]);
     assertEquals(ALT.childs[0].raw, "abcd");
     assertEquals(ALT.childs[0].name, "title");
   },

@@ -1,5 +1,6 @@
 export type result = [boolean, string];
-export type parserfunc = (str: string, context: treeNode) => result;
+export type parsercontextlabel = {label:string,func:parserfunc};
+export type parserfunc = (str: string, context: treeNode, stack: parsercontextlabel[]) => result;
 export type parservar<T> = T|((context: treeNode)=>T)
 export class treeNode {
   name: string;
