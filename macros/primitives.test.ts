@@ -1,19 +1,19 @@
-import { assertEquals } from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
 import { empty, eq,match } from "./primitives.ts";
-import { treeNode } from "./types.ts"
-
+import { getparser } from "./utility.ts";
 
 Deno.test({
     name: "match() test",
     fn(): void {
-      assertEquals(match(/[0-9]/)("0", new treeNode("root")), [
-        true,
-        "",
-      ]);
-      assertEquals(match(/[0-9]/)("a", new treeNode("root")), [
-        false,
-        "a",
-      ]);
+      let regexpparser = getparser(match(/[0-9]/))
+      assertObjectMatch(
+        regexpparser("0"),
+        {success:true,leftstr:""},
+      );
+      assertObjectMatch(
+        regexpparser("a"),
+        {success:false,leftstr:"a"},
+      );
     },
   });
 
@@ -21,22 +21,34 @@ Deno.test({
 Deno.test({
     name: "eq() test",
     fn(): void {
-      assertEquals(eq("=")("", new treeNode("root")), [false, ""]);
-      assertEquals(eq("=")("=====", new treeNode("root")), [
-        true,
-        "====",
-      ]);
-      assertEquals(eq("===")("=====", new treeNode("root")), [true, "=="]);
+      let equalsingle = getparser(eq("="));
+      let equalmultiple = getparser(eq("==="));
+      assertObjectMatch(
+        equalsingle("a"),
+        {success:false,leftstr:"a"},
+      );
+      assertObjectMatch(
+        equalsingle("====="),
+        {success:true,leftstr:"===="},
+      );
+      assertObjectMatch(
+        equalmultiple("====="),
+        {success:true,leftstr:"=="},
+      );
     },
   });
   
 Deno.test({
   name: "empty() test",
   fn(): void {
-    assertEquals(empty("", new treeNode("root")), [true, ""]);
-    assertEquals(empty("=====", new treeNode("root")), [
-      false,
-      "=====",
-    ]);
+    let emptyf = getparser(empty)
+    assertObjectMatch(
+      emptyf("====="),
+      {success:false,leftstr:"====="},
+    );
+    assertObjectMatch(
+      emptyf(""),
+      {success:true,leftstr:""},
+    );
   },
 });

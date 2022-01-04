@@ -1,5 +1,5 @@
 import { doc, postprocess } from "../../parsers/xwiki.ts";
-import { treeNode } from "../../macros/macros.ts";
+import type { treeNode } from "../../macros/macros.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
 
 const res = await fetch("./export/package.xml");
@@ -31,8 +31,7 @@ inputbox.forEach((v) => {
       let content = String(
         xmltree.querySelector("xwikidoc > content")?.firstChild?.nodeValue,
       );
-      let tree = new treeNode("root");
-      let [res,rest] = doc(content, tree, []);
+      let {success:res,leftstr:rest,tree} = doc(content);
       postprocess(tree);
 
       let statElem=

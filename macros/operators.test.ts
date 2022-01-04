@@ -1,57 +1,50 @@
-import { assertEquals,assertThrows,assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { assertThrows,assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
 import { multiple, not, or, seq, symbol } from "./operators.ts";
 import { empty, eq } from "./primitives.ts";
-import { treeNode } from "./types.ts"
+import { getparser } from "./utility.ts"
 
 
 Deno.test({
   name: "multiple() test",
   fn(): void {
-    assertEquals(
-      multiple(eq("="))("", new treeNode("root"),[]),
-      [true, ""],
+    let infinitemultiple = getparser(multiple(eq("=")))
+    assertObjectMatch(
+      infinitemultiple(""),
+      {success:true,leftstr:""},
     );
-    assertEquals(
-      multiple(eq("="))("=====", new treeNode("root"),[]),
-      [true, ""],
+    assertObjectMatch(
+      infinitemultiple("====="),
+      {success:true,leftstr:""},
     );
-    assertEquals(
-      multiple(eq("="))("=====+", new treeNode("root"),[]),
-      [true, "+"],
+    assertObjectMatch(
+      infinitemultiple("=====+"),
+      {success:true,leftstr:"+"},
     );
-    assertEquals(
-      multiple(eq("="), 1)(
-        "+=====+",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(multiple(eq("="), 1))(
+        "+=====+"
       ),
-      [false, "+=====+"],
+      {success:false,leftstr:"+=====+"},
     );
-    assertEquals(
-      multiple(eq("="), 6)("=====", new treeNode("root"),[]),
-      [false, "====="],
+    assertObjectMatch(
+      getparser(multiple(eq("="), 6))("====="),
+      {success:false,leftstr:"====="},
     );
-    assertEquals(
-      multiple(eq("="), 0, 4)(
-        "=====",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(multiple(eq("="), 0, 4))(
+        "====="
       ),
-      [false, "====="],
+      {success:false,leftstr:"====="},
     );
-    assertEquals(
-      multiple(eq("="), 1, 1)(
-        "=",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(multiple(eq("="), 1, 1))(
+        "="
       ),
-      [false, "="],
+      {success:false,leftstr:"="},
     );
 
-    assertThrows(()=>multiple(empty)(
+    assertThrows(()=>getparser(multiple(empty))(
       "",
-      new treeNode("root"),
-      [],
     ),Error,"empty match")
   },
 });
@@ -59,63 +52,51 @@ Deno.test({
 Deno.test({
   name: "or() test",
   fn(): void {
-    assertEquals(
-      or(eq("="), eq("|"))(
-        "|",
-        new treeNode("root"),
-        [],
+    let equfront = getparser(or(eq("="), eq("|")));
+    let splitfront = getparser(or(eq("|"), eq("=")));
+    assertObjectMatch(
+      equfront(
+        "|"
       ),
-      [true, ""],
+      {success:true,leftstr:""},
     );
-    assertEquals(
-      or(eq("|"), eq("="))(
-        "|",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      splitfront(
+        "|"
       ),
-      [true, ""],
+      {success:true,leftstr:""},
     );
 
-    assertEquals(
-      or(eq("="), eq("|"))(
-        "+",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      equfront(
+        "+"
       ),
-      [false, "+"],
+      {success:false,leftstr:"+"},
     );
-    assertEquals(
-      or(eq("|"), eq("="))(
-        "+",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      splitfront(
+        "+"
       ),
-      [false, "+"],
+      {success:false,leftstr:"+"},
     );
 
-    assertEquals(
-      or(eq("="), eq("|"))(
-        "|=|||",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      equfront(
+        "|=|||"
       ),
-      [true, "=|||"],
+      {success:true,leftstr:"=|||"},
     );
-    assertEquals(
-      or(eq("|"), eq("="))(
-        "|=|||",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      splitfront(
+        "|=|||"
       ),
-      [true, "=|||"],
+      {success:true,leftstr:"=|||"},
     );
-    assertEquals(
-      or(eq("||||"), eq("=||"))(
-        "|||",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(or(eq("||||"), eq("=||")))(
+        "|||"
       ),
-      [false, "|||"],
+      {success:false,leftstr:"|||"},
     );
   },
 });
@@ -123,54 +104,42 @@ Deno.test({
 Deno.test({
   name: "not() test",
   fn(): void {
-    assertEquals(
-      not(eq("="))(
-        "|",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(not(eq("=")))(
+        "|"
       ),
-      [true, ""],
+      {success:true,leftstr:""},
     );
-    assertEquals(
-      not(eq("|"))(
-        "|",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(not(eq("|")))(
+        "|"
       ),
-      [false, "|"],
+      {success:false,leftstr:"|"},
     );
-    assertEquals(
-      not(eq("|"))(
-        "",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(not(eq("|")))(
+        ""
       ),
-      [true, ""],
+      {success:true,leftstr:""},
     );
 
-    assertEquals(
-      not(or(eq("="), eq("|")))(
-        "+",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(not(or(eq("="), eq("|"))))(
+        "+"
       ),
-      [true, ""],
+      {success:true,leftstr:""},
     );
-    assertEquals(
-      not(or(eq("|"), eq("=")))(
-        "|",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(not(or(eq("|"), eq("="))))(
+        "|"
       ),
-      [false, "|"],
+      {success:false,leftstr:"|"},
     );
-    assertEquals(
-      not(eq("||||"))(
-        "|||",
-        new treeNode("root"),
-        [],
+    assertObjectMatch(
+      getparser(not(eq("||||")))(
+        "|||"
       ),
-      [true, "||"],
+      {success:true,leftstr:"||"},
     );
   },
 });
@@ -178,70 +147,80 @@ Deno.test({
 Deno.test({
   name: "seq() test",
   fn(): void {
-    let parserfunction = seq(
+    let parser = getparser(seq(
       eq("="),
       multiple(eq("a")),
       eq("="),
-    );
-    assertEquals(parserfunction("=a=", new treeNode("root"),[]), [
-      true,
-      "",
-    ]);
-    assertEquals(parserfunction("=aba=", new treeNode("root"),[]), [
-      false,
-      "=aba=",
-    ]);
-    assertEquals(parserfunction("==", new treeNode("root"),[]), [true, ""]);
-    assertEquals(parserfunction("===", new treeNode("root"),[]), [
-      true,
-      "=",
-    ]);
-    assertEquals(parserfunction("=a==a=",new treeNode("root"),[]), [
-      true,
-      "=a=",
-    ]);
+    ));
+    assertObjectMatch(parser("=a="), {
+      success:true,
+      leftstr:""
+    });
+    assertObjectMatch(parser("=aba="), {
+      success:false,
+      leftstr:"=aba=",
+    });
+    assertObjectMatch(parser("=="),  {success:true,leftstr:""});
+    assertObjectMatch(parser("==="), {success:true,leftstr:"="});
+    assertObjectMatch(parser("=a==a="),{success:true,leftstr:"=a="});
 
-    assertEquals(seq(
+    assertObjectMatch(getparser(seq(
       multiple(eq("a")),
-    )("aa=",new treeNode("root"),[]), [
-      true,
-      "=",
-    ])
-    assertEquals(seq(
+    ))("aa="),{
+      success:true,
+      leftstr:"="
+    })
+    assertObjectMatch(getparser(seq(
       multiple(eq("")),
-    )("",new treeNode("root"),[]), [
-      true,
-      "",
-    ])
+    ))(""), {
+      success:true,
+      leftstr:""
+    })
   },
 });
 
 Deno.test({
   name: "symbol() test 1",
   fn(): void {
-    let parserfunction = seq(
+    let parser = getparser(seq(
       eq("="),
       symbol(multiple(eq("abcd")), "title"),
       eq("="),
-    );
-    let ALT = new treeNode("root");
-    assertEquals(parserfunction("=abcd=", ALT,[]), [true, ""]);
-    assertEquals(ALT.childs[0].raw, "abcd");
-    assertEquals(ALT.childs[0].name, "title");
+    ));
+    assertObjectMatch(parser("=abcd="), {
+      success:true,
+      leftstr:"",
+      tree:{
+        childs:{
+          "0":{
+            raw:"abcd",
+            name:"title"
+          }
+        }
+      }
+    });
   },
 });
 
 Deno.test({
   name: "symbol() test 2",
   fn(): void {
-    let parserfunction = seq(
+    let parserfunction = getparser(seq(
       eq("="),
       symbol(seq(eq("ab"), eq("cd")), "title"),
       eq("="),
-    );
-    let ALT = new treeNode("root");
-    assertEquals(parserfunction("=abcd=", ALT,[]), [true, ""]);
-    assertEquals(ALT.childs[0].raw, "abcd");
-    assertEquals(ALT.childs[0].name, "title");
+    ));
+    assertObjectMatch(parserfunction("=abcd="), {
+      success:true,
+      leftstr:"",
+      tree:{
+        childs:{
+          "0":{
+            raw:"abcd",
+            name:"title"
+          }
+        }
+      }
+    });
   },
 });

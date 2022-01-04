@@ -1,5 +1,5 @@
 import { parserfunc, parservar, treeNode, value } from "./types.ts"
-import { consumedstr } from "./utility.ts";
+import { consumedstr } from "./internalutility.ts";
 /**
  * this variable turn on such checks
  * - left recurse

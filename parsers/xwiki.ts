@@ -11,6 +11,7 @@ import {
   seq,
   symbol,
   treeNode,
+  getparser,
 value,
 } from "../macros/macros.ts";
 
@@ -229,10 +230,10 @@ const newline: parserfunc = or(
   paragraph,
 );
 
-export const doc: parserfunc = particleinmiddle(
+export const doc = getparser(particleinmiddle(
   newline,
   linebreak,
-);
+));
 
 export function postprocess(tree: treeNode) {
   if (tree.childs.length > 0 && tree.childs[0].name == "__listitem") {

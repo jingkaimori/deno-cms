@@ -1,8 +1,12 @@
+import { parserfunc, treeNode, parsercontextlabel } from "./types.ts";
 
-export function consumedstr(str:string,newstr:string){
-  if (newstr.length > 0) {
-    return str.slice(0, str.indexOf(newstr));
-  } else {
-    return str;
-  }
+export function getparser(parserfunc:parserfunc){
+    return (str:string)=>{
+        let tree = new treeNode("root");
+        let stack:parsercontextlabel[] = [];
+        let [success,leftstr] = parserfunc(str,tree,stack);
+        return {
+            tree,stack,success,leftstr
+        }
+    }
 }
