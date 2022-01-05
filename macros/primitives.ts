@@ -1,5 +1,5 @@
-import { parserfunc, parservar, value } from "./types.ts"
-
+import { parserfunc, parservar } from "./types.ts"
+import { value } from "./utility.ts";
   
   export function eq(expectedraw: parservar<string>): parserfunc {
     return (str, context) => {

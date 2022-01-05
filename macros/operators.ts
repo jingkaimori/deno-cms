@@ -1,4 +1,5 @@
-import { parserfunc, parservar, treeNode, value } from "./types.ts"
+import { parserfunc, parservar } from "./types.ts"
+import { treeNode, value } from "./utility.ts";
 import { consumedstr } from "./internalutility.ts";
 /**
  * this variable turn on such checks
@@ -16,7 +17,7 @@ const msg = {
  * @param label display label for this guard def
  */
 export function guard(func: parserfunc,label: string):parserfunc {
-  let wrapfunc:parserfunc = (str, context, stack) => {
+  const wrapfunc:parserfunc = (str, context, stack) => {
     if(safemode){
         let labelres = stack.find((v)=>v.func==wrapfunc);
         if(labelres === undefined){
