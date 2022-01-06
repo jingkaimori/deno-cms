@@ -37,6 +37,20 @@ Deno.test({
       );
     },
   });
+  Deno.test({
+    name: "eq() with empty string \"\" test",
+    fn(): void {
+      let equalsingle = getparser(eq(""));
+      assertObjectMatch(
+        equalsingle(""),
+        {success:false,leftstr:""},
+      );
+      assertObjectMatch(
+        equalsingle("====="),
+        {success:false,leftstr:"====="},
+      );
+    },
+  });
   
 Deno.test({
   name: "empty() test",

@@ -1,5 +1,14 @@
 import { parser, parsercontextlabel, parserfunc, parservar } from "./types.ts";
 
+/**
+ * 
+ */
+export const errormessage = {
+    leftrecurse : "multiple match found too many empty match, are there some bug?",
+    eqemptystr : "nothing equals an empty string\"\", consider using empty() instead",
+    undefinedfunc : "function referred is undefined, functions must be declared using symbol()"
+}
+
 export function getparser(parserfunc: parserfunc): parser {
     return (str: string) => {
         let tree = new treeNode("root");

@@ -1,13 +1,13 @@
 import { assertThrows,assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
-import { multiple, not, or, seq, symbol } from "./operators.ts";
+import { getparserfunc, multiple, not, or, seq, symbol } from "./operators.ts";
 import { empty, eq } from "./primitives.ts";
 import { getparser } from "./utility.ts"
 
 
 Deno.test({
-  name: "multiple() test",
+  name: "infinite multiple() test",
   fn(): void {
-    let infinitemultiple = getparser(multiple(eq("=")))
+    const infinitemultiple = getparser(multiple(eq("=")))
     assertObjectMatch(
       infinitemultiple(""),
       {success:true,leftstr:""},
@@ -20,6 +20,12 @@ Deno.test({
       infinitemultiple("=====+"),
       {success:true,leftstr:"+"},
     );
+  },
+});
+
+Deno.test({
+  name: "ranged multiple() test",
+  fn(): void {
     assertObjectMatch(
       getparser(multiple(eq("="), 1))(
         "+=====+"
@@ -37,13 +43,33 @@ Deno.test({
       {success:false,leftstr:"====="},
     );
     assertObjectMatch(
+      getparser(multiple(eq("="), 0, 5))(
+        "====="
+      ),
+      {success:false,leftstr:"====="},
+    );
+    assertObjectMatch(
+      getparser(multiple(eq("="), 0, 6))(
+        "====="
+      ),
+      {success:true,leftstr:""},
+    );
+    assertObjectMatch(
       getparser(multiple(eq("="), 1, 1))(
         "="
       ),
       {success:false,leftstr:"="},
     );
+  },
+});
 
+Deno.test({
+  name: "multiple() security test",
+  fn(): void {
     assertThrows(()=>getparser(multiple(empty))(
+      "",
+    ),Error,"empty match")
+    assertThrows(()=>getparser(seq(multiple(empty)))(
       "",
     ),Error,"empty match")
   },
@@ -147,7 +173,7 @@ Deno.test({
 Deno.test({
   name: "seq() test",
   fn(): void {
-    let parser = getparser(seq(
+    const parser = getparser(seq(
       eq("="),
       multiple(eq("a")),
       eq("="),
@@ -169,12 +195,6 @@ Deno.test({
     ))("aa="),{
       success:true,
       leftstr:"="
-    })
-    assertObjectMatch(getparser(seq(
-      multiple(eq("")),
-    ))(""), {
-      success:true,
-      leftstr:""
     })
   },
 });
@@ -222,5 +242,38 @@ Deno.test({
         }
       }
     });
+  },
+});
+
+Deno.test({
+  name: "guard() test",
+  fn(): void {
+    const title = getparser(symbol(seq(
+        or(getparserfunc("title"), eq("a")),
+        eq("="),
+      ), "title"));
+    assertThrows(()=>title(
+      "a==",
+    ),Error,"empty match")
+  },
+});
+
+Deno.test({
+  name: "getparserfunc() test",
+  fn(): void {
+    const title = getparser(symbol(seq(
+        eq("="),
+        or(getparserfunc("title"), eq("a")),
+        eq("="),
+      ), "title"));
+    assertObjectMatch(title(
+      "==a==",
+    ),{
+      success:true,
+      leftstr:"",
+      stack:{
+        length:0
+      },
+    })
   },
 });

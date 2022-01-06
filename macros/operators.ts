@@ -1,29 +1,34 @@
 import { parserfunc, parservar } from "./types.ts"
-import { treeNode, value } from "./utility.ts";
+import { treeNode, value, errormessage } from "./utility.ts";
 import { consumedstr } from "./internalutility.ts";
 /**
  * this variable turn on such checks
  * - left recurse
  */
 const safemode = true;
-const msg = {
-  leftrecurse : "multiple match found too many empty match, are there some bug?"
-}
 
 /**
  * manually guard that left 
  * some CSG will left recursive finite times
  * @param func 
- * @param label display label for this guard def
+ * @param type display label for this guard def
+ * @param label lookup label for this func
  */
-export function guard(func: parserfunc,label: string):parserfunc {
-  const wrapfunc:parserfunc = (str, context, stack) => {
+export function guard(func: parserfunc, type: string, label?:parservar<string>):parserfunc {
+  const guardfunc:parserfunc = (str, context, stack) => {
     if(safemode){
-        let labelres = stack.find((v)=>v.func==wrapfunc);
-        if(labelres === undefined){
-          throw new Error(msg.leftrecurse)
+        const labelres = stack.find((v)=>v.func==guardfunc);
+        if(labelres !== undefined){
+          if(str == labelres.strremain){
+            throw new Error(errormessage.leftrecurse)
+          }
         }
-        stack.push({label:label,func:wrapfunc});
+        stack.push({
+          type:type,
+          label:label===undefined?"":value(label,context),
+          func:guardfunc,
+          strremain:str,
+        });
         let res = func(str,context,stack);
         stack.pop();
         return res;
@@ -31,11 +36,11 @@ export function guard(func: parserfunc,label: string):parserfunc {
       return func(str,context,stack);
     }
   }
-  return wrapfunc;
+  return guardfunc;
 }
 
 export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
-  return (str, context, stack) => {
+  const __symbol:parserfunc = (str, context, stack) => {
     const namevalue=value(name,context);
     const childsymbol = new treeNode(namevalue);
     context.appendchild(childsymbol);
@@ -46,7 +51,8 @@ export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
       childsymbol.raw = consumedstr(str,laststr);
     }
     return [receive, laststr];
-  };
+  }
+  return guard(__symbol,"symbol",name);
 }
 
 export function multiple(
@@ -54,7 +60,7 @@ export function multiple(
   min?: parservar<number>,
   max?: parservar<number>,
 ): parserfunc {
-  return (originstr, context, stack) => {
+  return guard((originstr, context, stack) => {
     let times = -1;
     let receive = true, loopstr = originstr;
     do {
@@ -62,7 +68,7 @@ export function multiple(
       const laststr = loopstr;
       [receive, loopstr] = func(loopstr, context, stack);
       if(laststr == loopstr&&receive&&safemode){
-        throw new Error(msg.leftrecurse)
+        throw new Error(errormessage.leftrecurse)
       }
     } while (receive);
     if (min && times < value(min,context)) {
@@ -72,18 +78,18 @@ export function multiple(
     } else {
       return [true, loopstr];
     }
-  };
+  },"multiple");
 }
 
 export function not(func: parserfunc): parserfunc {
-  return (str, context, stack) => {
+  return guard((str, context, stack) => {
     const [receive,] = func(str, context.clone(),stack);
     if (receive) {
       return [false, str];
     } else {
       return [true, str.slice(1)];
     }
-  };
+  },"not");
 }
 
 /**
@@ -107,7 +113,7 @@ export function modifycontext(func:parserfunc,modifier:(str:string,laststr:strin
 
 export function or(...functions: parserfunc[]): parserfunc {
    __warnSubparserNums(or,...functions)
-  return (str, context, stack) => {
+  return guard((str, context, stack) => {
     for (const func of functions) {
       const [receive, next] = func(str, context, stack);
       if (receive) {
@@ -115,12 +121,12 @@ export function or(...functions: parserfunc[]): parserfunc {
       }
     }
     return [false, str];
-  };
+  },"or");
 }
 
 export function seq(...functions: parserfunc[]): parserfunc {
    __warnSubparserNums(seq,...functions);
-  return (str, context, stack) => {
+  return guard((str, context, stack) => {
     let receive = true, newstr = str;
     for (const func of functions) {
       [receive, newstr] = func(newstr, context, stack);
@@ -131,9 +137,20 @@ export function seq(...functions: parserfunc[]): parserfunc {
       }
     }
     return [true, newstr];
-  };
+  },"seq");
 }
 
+export function getparserfunc(name:string):parserfunc {
+  return (str,ctx,stack)=>{
+    const labelres = stack.find((v)=>v.label==name);
+    if(labelres === undefined){
+      throw new Error(errormessage.undefinedfunc)
+    }else{
+      const func = labelres.func;
+      return func(str,ctx,stack);
+    }
+  }
+}
 
 /**
  * not recommend to use out of macro meta defs
