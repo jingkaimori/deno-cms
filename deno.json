@@ -1,5 +1,11 @@
 {
     "compilerOptions": {
         "lib": ["esnext", "dom", "deno.ns"]
+    },
+    "fmt":{
+        "options": {
+            "lineWidth": 80,
+            "indentWidth": 4
+        }
     }
 }

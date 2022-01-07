@@ -78,8 +78,8 @@ Deno.test({
 Deno.test({
   name: "or() test",
   fn(): void {
-    let equfront = getparser(or(eq("="), eq("|")));
-    let splitfront = getparser(or(eq("|"), eq("=")));
+    const equfront = getparser(or(eq("="), eq("|")));
+    const splitfront = getparser(or(eq("|"), eq("=")));
     assertObjectMatch(
       equfront(
         "|"
@@ -202,7 +202,7 @@ Deno.test({
 Deno.test({
   name: "symbol() test 1",
   fn(): void {
-    let parser = getparser(seq(
+    const parser = getparser(seq(
       eq("="),
       symbol(multiple(eq("abcd")), "title"),
       eq("="),
@@ -225,7 +225,7 @@ Deno.test({
 Deno.test({
   name: "symbol() test 2",
   fn(): void {
-    let parserfunction = getparser(seq(
+    const parserfunction = getparser(seq(
       eq("="),
       symbol(seq(eq("ab"), eq("cd")), "title"),
       eq("="),

@@ -13,7 +13,7 @@ export function getparser(parserfunc: parserfunc): parser {
     return (str: string) => {
         let tree = new treeNode("root");
         let stack: parsercontextlabel[] = [];
-        let [success, leftstr] = parserfunc(str, tree, stack);
+        const [success, leftstr] = parserfunc(str, tree, stack);
         return {
             tree,
             stack,

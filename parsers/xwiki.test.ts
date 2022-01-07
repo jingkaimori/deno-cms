@@ -1,7 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.90.0/testing/asserts.ts";
 import { hyperlink, list, listitemnew, macrowithoutbody, postprocess, title, titletext } from "./xwiki.ts";
-import { treeNode } from "../macros/types.ts";
-import { match, seq } from "../macros/macros.ts";
+import { match, seq, treeNode } from "../macros/macros.ts";
 
 Deno.test({
   name: "title() test",
