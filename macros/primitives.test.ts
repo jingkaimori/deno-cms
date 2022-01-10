@@ -5,7 +5,7 @@ import { getparser } from "./utility.ts";
 Deno.test({
     name: "match() test",
     fn(): void {
-      let regexpparser = getparser(match(/[0-9]/))
+      const regexpparser = getparser(match(/[0-9]/))
       assertObjectMatch(
         regexpparser("0"),
         {success:true,leftstr:""},

@@ -11,7 +11,7 @@ export const errormessage = {
 
 export function getparser(parserfunc: parserfunc): parser {
     return (str: string) => {
-        let tree = new treeNode("root");
+        let tree:treeNode<rootNode> = new treeNode<rootNode>("root")
         let stack: parsercontextlabel[] = [];
         const [success, leftstr] = parserfunc(str, tree, stack);
         return {
@@ -22,24 +22,42 @@ export function getparser(parserfunc: parserfunc): parser {
         };
     };
 }
+export interface generalNode {
+    type:string;
+    parent:treeNode<generalNode>|null;
+    // deno-lint-ignore no-explicit-any
+    auxilary:Record<string,any>;
+}
+export interface nonrootNode extends generalNode {
+    parent:treeNode<generalNode>;
+}
 
-export class treeNode {
-    name: string;
+export interface rootNode extends generalNode{
+    type:'root';
+    parent:null;
+    auxilary:Record<never,never>;
+}
+export type treeRootNode = treeNode<rootNode>
+
+export class treeNode<T extends generalNode = nonrootNode> {
+    name: T["type"];
     raw: string;
     childs: treeNode[];
-    parent: treeNode | null;
-    constructor(name: string) {
+    parent: T["parent"];
+    auxilary:T["auxilary"];
+    constructor(name: T["type"]) {
         this.name = name;
         this.childs = [];
         this.raw = "";
         this.parent = null;
+        this.auxilary = {};
     }
-    appendchild(child: treeNode): treeNode {
+    appendchild(child: treeNode<nonrootNode>): treeNode {
         this.childs.push(child);
         child.parent = this;
         return child;
     }
-    removechild(child: treeNode): void {
+    removechild(child: treeNode<nonrootNode>): void {
         const candidate = this.childs.pop();
         if (candidate === child) {
             //successfully removed
@@ -56,16 +74,17 @@ export class treeNode {
     toString(space?: string | number): string {
         return JSON.stringify(this, ["name", "raw", "childs"], space);
     }
-    clone(): treeNode {
-        const retval = new treeNode(this.name);
+    clone(): treeNode<T> {
+        const retval = new treeNode<T>(this.name);
         retval.raw = this.raw;
         retval.parent = this.parent;
         retval.childs = Array.from(this.childs);
+        retval.auxilary = this.auxilary
         return retval;
     }
 }
 
-export function value<T>(variable: parservar<T>, context: treeNode): T {
+export function value<T>(variable: parservar<T>, context: treeNode<generalNode>): T {
     if (variable instanceof Function) {
         return variable(context);
     } else {

@@ -1,5 +1,5 @@
 import { parserfunc, parservar } from "./types.ts"
-import { treeNode, value, errormessage } from "./utility.ts";
+import { treeNode, generalNode, value, errormessage } from "./utility.ts";
 import { consumedstr } from "./internalutility.ts";
 /**
  * this variable turn on such checks
@@ -101,8 +101,8 @@ export function not(func: parserfunc): parserfunc {
  * @param modifier 
  * @returns 
  */
-export function modifycontext(func:parserfunc,modifier:(str:string,laststr:string,context:treeNode)=>void):parserfunc{
-  return (str:string,context:treeNode,stack)=>{
+export function modifycontext(func:parserfunc,modifier:(str:string,laststr:string,context:treeNode<generalNode>)=>void):parserfunc{
+  return (str:string,context,stack)=>{
     const [receive, laststr] = func(str, context,stack);
     if (receive)  {
       modifier(str,laststr,context);

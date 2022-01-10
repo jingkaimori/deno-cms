@@ -13,6 +13,7 @@ import {
   treeNode,
   getparser,
 value,
+generalNode,
 } from "../macros/macros.ts";
 
 const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
@@ -235,7 +236,7 @@ export const doc = getparser(particleinmiddle(
   linebreak,
 ));
 
-export function postprocess(tree: treeNode) {
+export function postprocess(tree: treeNode<generalNode>) {
   if (tree.childs.length > 0 && tree.childs[0].name == "__listitem") {
     let [restree] = listmerge(tree.childs, 1);
     tree.childs = [restree];
