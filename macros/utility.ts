@@ -1,4 +1,4 @@
-import { parser, parsercontextlabel, parserfunc, parservar } from "./types.ts";
+import { parser, parsercontextlabel, parserevent, parserfunc, parservar } from "./types.ts";
 
 /**
  * 
@@ -13,12 +13,14 @@ export function getparser(parserfunc: parserfunc): parser {
     return (str: string) => {
         let tree:treeNode<rootNode> = new treeNode<rootNode>("root")
         let stack: parsercontextlabel[] = [];
-        const [success, leftstr] = parserfunc(str, tree, stack);
+        let events: parserevent[] = [];
+        const [success, leftstr] = parserfunc(str, tree, stack,events);
         return {
             tree,
             stack,
             success,
             leftstr,
+            events,
         };
     };
 }
