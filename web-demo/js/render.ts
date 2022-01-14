@@ -1,18 +1,19 @@
-import { treeNode } from "../../macros/macros.ts";
+import { treeNode, generalNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
 //import katex from "https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.mjs";
 type contextType = Record<string, any>;
 
 type processer = (
-  iptTree: treeNode,
+  iptTree: treeNode<generalNode>,
   resTree: HTMLElement,
   context: contextType,
 ) => [HTMLElement];
 const mappers = new Processors<processer>({
   "title": function name(tree, output, context) {
-    const match = tree.raw.match(/^=+/);
-    let lth = match?.at(0)?.length;
-    if (lth) {
+    // const match = tree.raw.match(/^=+/);
+    // let lth = match?.at(0)?.length;
+    let lth = tree.auxilary.level
+    if (typeof lth == "number" || lth instanceof Number) {
       let title = document.createElement("h" + lth.toString());
       output.append(title);
       return [title];
@@ -24,17 +25,20 @@ const mappers = new Processors<processer>({
   },
   "root": mapToNode("article"),
   "par": mapToNode("p"),
+  "paragraph": mapToNode("p"),
   "hyperlink": mapToNode("a"),
   "ulist": mapToNode("ul"),
   "olist": mapToNode("ol"),
   "dlist": mapToNode("dl"),
   "item": mapToNode("li"),
+  "list_item": mapToNode("li"),
   "dt": mapToNode("dt"),
   "dd": mapToNode("dd"),
   "br": mapToNode("br"),
   "template": mapToNode("box"),
   "template-warning": mapToNode("warning"),
   "template-code": mapToNode("code"),
+  "code": mapToNode("pre"),
   "template-cite": mapToNode("cite"),
   "template-toc": mapToNode("toc"),
   "template-formula": (tree, output, context) => {
@@ -60,17 +64,29 @@ const mappers = new Processors<processer>({
     return [output];
   },
   "__plain": mapToText(),
+  "text": mapToText(),
   "titletext": mapToText(),
-}, (i, r, c) => [r]);
+  "link": function name(tree,output,context) {
+    let [link] = mapToNode("a")(tree,output,context) as [HTMLAnchorElement];
+    link.setAttribute("href",tree.auxilary.dest);
+    link.setAttribute("tooltip",tree.auxilary.title)
+    return [link]
+  },
+  "blockquote":mapToNode("blockquote"),
+  "strong":mapToNode("strong"),
+  "em":mapToNode("em"),
+  "codespan":mapToNode("code"),
+  "del":mapToNode("del")
+}, (i, r, c) => {console.warn("unknown node: "+i.name);return [r]});
 
 export function mapNode(
-  iptTree: treeNode,
+  iptTree: treeNode<generalNode>,
   resTree: HTMLElement,
   contextStack: contextType[],
 ): [HTMLElement, contextType] {
   //console.group(iptTree.parentNode?.nodeName)
   //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
-  let passSelected = mappers.getProcessor(iptTree.name);
+  const passSelected = mappers.getProcessor(iptTree.name);
   let context = contextStack.reduce(
     (pre, cur) => {
       return Object.assign(pre, cur);

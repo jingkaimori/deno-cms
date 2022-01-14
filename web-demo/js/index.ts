@@ -1,25 +1,41 @@
-import { doc, postprocess } from "../../parsers/xwiki.ts";
-import type { treeNode } from "../../macros/macros.ts";
+import * as xwiki from "../../parsers/xwiki.ts";
+import type { treeNode, rootNode } from "../../macros/macros.ts";
+import * as markdown from "../../parsers/borrowed/markdown.ts"
+import { Site, ArticleLocal } from "../../types/repository.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
+import * as path from "https://deno.land/std@0.90.0/path/mod.ts"
 
-const res = await fetch("./export/package.xml");
-const parser = new DOMParser();
-const tree = parser.parseFromString(await res.text(), "text/xml") as XMLDocument;
-const files = tree.querySelectorAll("package > files > *");
+const mode = {meta:"local",format:"md"};
+if(mode.meta == "xwiki"){
+  const res = await fetch("./export/package.xml");
+  const parser = new DOMParser();
+  const tree = parser.parseFromString(await res.text(), "text/xml") as XMLDocument;
+  const files = tree.querySelectorAll("package > files > *");
+  files.forEach((v) => {
+    let li = document.createElement("li");
+    li.classList.add("filename");
+    li.innerText = String(v.firstChild?.nodeValue);
+    li.addEventListener("click", handleClick);
+    (document.querySelector("#list") as HTMLUListElement).append(li);
+  });
+}else if(mode.meta == "local"){
+  const res = await fetch("./export/meta.json");
+  const tree = JSON.parse(await res.text()) as Site;
+  const files = tree.articles;
+  files.forEach((v) => {
+    let li = document.createElement("li");
+    li.classList.add("filename");
+    li.innerText = String(v.path);
+    li.addEventListener("click", handleClick);
+    (document.querySelector("#list") as HTMLUListElement).append(li);
+  });
 
-files.forEach((v) => {
-  let li = document.createElement("li");
-  li.classList.add("filename");
-  li.innerText = String(v.firstChild?.nodeValue);
-  (document.querySelector("#list") as HTMLUListElement).append(li);
-});
+}
 
-let inputbox =
-  (document.querySelectorAll(".filename") as NodeListOf<HTMLLIElement>);
-inputbox.forEach((v) => {
-  v.addEventListener("click", async function (e) {
-    const filename = this.firstChild?.nodeValue;
-    if (filename) {
+async function handleClick(this:HTMLLIElement) {
+  const filename = this.firstChild?.nodeValue;
+  if (filename) {
+    if(mode.format == "xwiki"){
       const first = await fetch(getArticleTitle(filename));
       const parser = new DOMParser();
       //Firefox don't support xml 1.1, so downgrade version
@@ -28,62 +44,85 @@ inputbox.forEach((v) => {
         "<?xml version='1.0",
       );
       let xmltree = parser.parseFromString(text, "text/xml") as XMLDocument;
+      console.log(xmltree);
       let content = String(
         xmltree.querySelector("xwikidoc > content")?.firstChild?.nodeValue,
       );
-      let {success:res,leftstr:rest,tree} = doc(content);
-      postprocess(tree);
+      let {success:res,leftstr:rest,tree} = xwiki.doc(content);
+      xwiki.postprocess(tree);
+      renderResult(content,res,rest);
+      renderDoc(tree);
+    }else if(mode.format == "md"){
+      let url ;
+      const first = await fetch(path.join("./export",filename));
+      const text = await first.text();
+      const {success,leftstr,tree} = markdown.doc(text);
+      renderResult(text,success,leftstr);
+      renderDoc(tree);
+      //renderDoc(text)
+    }
+  } else { /* do nothing */ }
+}
 
-      let statElem=
-        document.querySelector("#stat") as HTMLParagraphElement;
-      if(res){
-        statElem.classList.add("success");
-        statElem.classList.remove("failure");
-        statElem.innerText = "success";
-      }else{
-        statElem.classList.add("failure");
-        statElem.classList.remove("success");
-        statElem.innerText = "failure";
-      }
+/**
+ * 
+ * @param content the whole string to be parse
+ * @param res 
+ * @param rest the part left by parser
+ */
+function renderResult(content:string,res:boolean,rest:string) {
 
-      console.log(rest)
-      if(rest.length==0){
-        //all chars are used, no need to get rest chars
-      }else{
-        let splitstr = content.slice(0,content.indexOf(rest))
-        let begini = splitstr.lastIndexOf("\n")
-        let beginp = splitstr;
-        if(begini>0){
-        beginp = splitstr.slice(begini);}
+  let statElem=
+    document.querySelector("#stat") as HTMLParagraphElement;
+  if(res){
+    statElem.classList.add("success");
+    statElem.classList.remove("failure");
+    statElem.innerText = "success";
+  }else{
+    statElem.classList.add("failure");
+    statElem.classList.remove("success");
+    statElem.innerText = "failure";
+  }
 
-        let endi = rest.indexOf('\n')
-        let endp = rest;
-        if(endi>0){
-          endp = rest.slice(0,endi);
-        }
+  console.log(rest)
+  if(rest.length==0){
+    //all chars are used, no need to get rest chars
+  }else{
+    let splitstr = content.slice(0,content.indexOf(rest))
+    let begini = splitstr.lastIndexOf("\n")
+    let beginp = splitstr;
+    if(begini>0){
+    beginp = splitstr.slice(begini);}
 
-        (document.querySelector("#diff > #front") as HTMLSpanElement).innerText = beginp;
-        (document.querySelector("#diff > #end") as HTMLSpanElement).innerText = endp;
-      }
-      console.log(tree);
-      // let displayTree = tree.cloneNode(true)
-      let [displayTree] = mapNode(
-        tree,
-        document.createElement("article"),
-        [{ mode: "none" }],
-      );
-      console.log(displayTree);
-      console.log(xmltree);
+    let endi = rest.indexOf('\n')
+    let endp = rest;
+    if(endi>0){
+      endp = rest.slice(0,endi);
+    }
 
-      let renderedDoc: HTMLDivElement =
-        (document.querySelector("#rendered") as HTMLDivElement);
-        clearChilds(renderedDoc);
-        clearChilds((document.querySelector("#diff > #front") as HTMLSpanElement));
-        clearChilds((document.querySelector("#diff > #end") as HTMLSpanElement));
-      renderedDoc.appendChild(displayTree);
-    } else { /* do nothing */ }
-  });
-});
+    (document.querySelector("#diff > #front") as HTMLSpanElement).innerText = beginp;
+    (document.querySelector("#diff > #end") as HTMLSpanElement).innerText = endp;
+  }
+}
+
+function renderDoc(tree:Readonly<treeNode<rootNode>>) {
+  console.log(tree);
+  // let displayTree = tree.cloneNode(true)
+  const [displayTree] = mapNode(
+    tree,
+    document.createElement("article"),
+    [{ mode: "none" }],
+  );
+  console.log(displayTree);
+
+  let renderedDoc: HTMLDivElement =
+    (document.querySelector("#rendered") as HTMLDivElement);
+    clearChilds(renderedDoc);
+    clearChilds((document.querySelector("#diff > #front") as HTMLSpanElement));
+    clearChilds((document.querySelector("#diff > #end") as HTMLSpanElement));
+  renderedDoc.appendChild(displayTree);
+  
+}
 
 function clearChilds(element: HTMLElement): void {
   Array.from(element.childNodes)
