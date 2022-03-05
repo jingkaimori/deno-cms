@@ -88,7 +88,7 @@ let paragraph = symbol(
     particleinmiddle(listitem, match(/[\n\r]/)),
     particleinmiddle(inline, match(/[\n\r]/)),
   ),
-  "par",
+  "paragraph",
 );
 
 let newline: parserfunc = or(title, paragraph);

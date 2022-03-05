@@ -225,7 +225,7 @@ const paragraph = symbol(
     list,
     particleinmiddle(inline, br),
   ),
-  "par",
+  "paragraph",
 );
 
 const newline: parserfunc = or(

@@ -24,7 +24,6 @@ const mappers = new Processors<processer>({
     }
   },
   "root": mapToNode("article"),
-  "par": mapToNode("p"),
   "paragraph": mapToNode("p"),
   "hyperlink": mapToNode("a"),
   "ulist": mapToNode("ul"),
