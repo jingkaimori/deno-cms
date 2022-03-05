@@ -1,4 +1,4 @@
-import { eq, match, multiple, or, parserfunc, seq, symbol, treeNode } from "../macros/macros.ts";
+import { eq, match, multiple, or, parserfunc, seq, symbol, treeNode,getparserfunc } from "../macros/macros.ts";
 
 let plainchar: parserfunc = match(/[^\n\r]/);
 let plain: parserfunc = symbol(
@@ -10,14 +10,6 @@ let whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
 let linebreak: parserfunc = multiple(match(/[\n\r]/), 1)
 
-export let title: parserfunc = symbol(function __title(str, context,stack) {
-  return (seq(
-    eq("="),
-    or(__title, titletext),
-    eq("="),
-  ))(str, context,stack);
-}, "title");
-
 export let titletext: parserfunc = symbol(
   particleinmiddle(
     multiple(match(/[^\n\r=]/), 1),
@@ -25,6 +17,12 @@ export let titletext: parserfunc = symbol(
   ),
   "titletext",
 );
+
+export const title: parserfunc = symbol(seq(
+    eq("="),
+    or(getparserfunc("title"), titletext),
+    eq("="),
+  ), "title");
 
 let path: parserfunc = symbol(
   multiple(match(/[^\n\r\]>]/)),

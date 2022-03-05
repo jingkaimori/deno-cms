@@ -1,32 +1,23 @@
 import {
   empty,
   eq,
+  generalNode,
+  getparser,
+  getparserfunc,
   match,
   multiple,
   neq,
   not,
   or,
   parserfunc,
-  parservar,
   seq,
   symbol,
   treeNode,
-  getparser,
-value,
-generalNode,
 } from "../macros/macros.ts";
 
 const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
 const linebreak: parserfunc = multiple(match(/[\n\r]/), 1);
-
-export const title: parserfunc = symbol(function __title(str, context, stack) {
-  return (seq(
-    eq("="),
-    or(__title, titletext),
-    eq("="),
-  ))(str, context, stack);
-}, "title");
 
 export const titletext: parserfunc = symbol(
   particleinmiddle(
@@ -35,6 +26,12 @@ export const titletext: parserfunc = symbol(
   ),
   "titletext",
 );
+
+export const title: parserfunc = symbol(seq(
+  eq("="),
+  or(getparserfunc("title"), titletext),
+  eq("="),
+), "title");
 
 const path: parserfunc = symbol(
   multiple(match(/[^\n\r\]>]/)),
@@ -168,7 +165,7 @@ export const listitem: parserfunc = symbol(
 export const followedlist: parserfunc = symbol(
   seq(
     match(/[\n\r]/),
-    (s, context, stack) => {
+    (s, context, stack, e) => {
       const namenode = context?.parent?.childs.at(0)?.childs
         .find((v) => (v.name == "__delim"));
       const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
@@ -177,7 +174,7 @@ export const followedlist: parserfunc = symbol(
       return symbol(
         multiple(match(/(\*\.|\*|1\.|1|;|:)/), lthval, newlth),
         "__delim",
-      )(s, context, stack);
+      )(s, context, stack, e);
     },
     inline,
   ),
@@ -200,17 +197,26 @@ export const listitemnew: parserfunc = symbol(
   "__listitemnew",
 );
 
-export const list: parserfunc = function __list(str, context, stack) {
-  const cascadedlist = multiple(seq(match(/[\n\r]/), __list), 0, 2);
-  return symbol(
-    seq(
-      listitemnew,
-      cascadedlist,
-      multiple(seq(followedlist, cascadedlist)),
-    ),
-    "__list",
-  )(str, context, stack);
-};
+// export const list: parserfunc = function __list(str, context, stack) {
+//   const cascadedlist = multiple(seq(match(/[\n\r]/), __list), 0, 2);
+//   return symbol(
+//     seq(
+//       listitemnew,
+//       cascadedlist,
+//       multiple(seq(followedlist, cascadedlist)),
+//     ),
+//     "__list",
+//   )(str, context, stack);
+// };
+const cascadedlist = multiple(seq(match(/[\n\r]/), getparserfunc("__list")), 0, 2);
+export const list: parserfunc = symbol(
+  seq(
+    listitemnew,
+    cascadedlist,
+    multiple(seq(followedlist, cascadedlist)),
+  ),
+  "__list",
+)
 
 const br = symbol(match(/[\n\r]/), "br");
 
