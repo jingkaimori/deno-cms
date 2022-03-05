@@ -4,21 +4,21 @@ import { Processors } from "../../utils/processer.ts";
 type contextType = Record<string, any>;
 
 type processer = (
-  iptTree: treeNode<generalNode>,
+  iptTree: Readonly<treeNode<generalNode>>,
   resTree: HTMLElement,
   context: contextType,
 ) => [HTMLElement];
 const mappers = new Processors<processer>({
-  "title": function name(tree, output, context) {
+  "title": function name(tree, output, _context) {
     // const match = tree.raw.match(/^=+/);
     // let lth = match?.at(0)?.length;
-    let lth = tree.auxilary.level
+    const lth = tree.auxilary.level
     if (typeof lth == "number" || lth instanceof Number) {
-      let title = document.createElement("h" + lth.toString());
+      const title = document.createElement("h" + lth.toString());
       output.append(title);
       return [title];
     } else {
-      let title = document.createElement("p");
+      const title = document.createElement("p");
       output.append(title);
       return [title];
     }
@@ -40,7 +40,7 @@ const mappers = new Processors<processer>({
   "code": mapToNode("pre"),
   "template-cite": mapToNode("cite"),
   "template-toc": mapToNode("toc"),
-  "template-formula": (tree, output, context) => {
+  "template-formula": (_tree, output, _context) => {
     let title = document.createElement("formula");
     //let math = katex.__parse(tree.childs[0]?.raw,{});
     //console.log(math);
@@ -48,7 +48,7 @@ const mappers = new Processors<processer>({
     return [title];
   },
   "__label": mapToText(),
-  "__path": function (tree, output, context) {
+  "__path": function (tree, output, _context) {
     if (/^url:(.*)/.test(tree.raw)) {
       (output as HTMLAnchorElement).setAttribute(
         "href",
@@ -66,7 +66,7 @@ const mappers = new Processors<processer>({
   "text": mapToText(),
   "titletext": mapToText(),
   "link": function name(tree,output,context) {
-    let [link] = mapToNode("a")(tree,output,context) as [HTMLAnchorElement];
+    const [link] = mapToNode("a")(tree,output,context) as [HTMLAnchorElement];
     link.setAttribute("href",tree.auxilary.dest);
     link.setAttribute("tooltip",tree.auxilary.title)
     return [link]
@@ -76,7 +76,7 @@ const mappers = new Processors<processer>({
   "em":mapToNode("em"),
   "codespan":mapToNode("code"),
   "del":mapToNode("del")
-}, (i, r, c) => {console.warn("unknown node: "+i.name);return [r]});
+}, (i, r, _c) => {console.warn("unknown node: "+i.name);return [r]});
 
 export function mapNode(
   iptTree: treeNode<generalNode>,
@@ -86,7 +86,7 @@ export function mapNode(
   //console.group(iptTree.parentNode?.nodeName)
   //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
   const passSelected = mappers.getProcessor(iptTree.name);
-  let context = contextStack.reduce(
+  const context = contextStack.reduce(
     (pre, cur) => {
       return Object.assign(pre, cur);
     },
@@ -98,7 +98,7 @@ export function mapNode(
     contextStack.push(newScope);
   } /* do nothing */
   else {
-    for (let i of iptTree.childs) {
+    for (const i of iptTree.childs) {
       mapNode(i, resTree, contextStack);
     }
   }
@@ -107,14 +107,14 @@ export function mapNode(
 }
 
 function mapToNode(name: string): processer {
-  return function (tree, output, context) {
-    let title = document.createElement(name);
+  return function (_tree, output, _context) {
+    const title = document.createElement(name);
     output.append(title);
     return [title];
   };
 }
 function mapToText(): processer {
-  return (tree, output, context) => {
+  return (tree, output, _context) => {
     const rawtext = tree.raw;
     const text = document.createTextNode(rawtext);
     output.append(text);
