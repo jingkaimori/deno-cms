@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html> 
     <head>
         <title>Test </title>
@@ -15,6 +16,11 @@
     </head>
     <body>
         <p>This is test page for render xwiki syntax. Extract <code>.xar</code> file exported from xwiki into <code>./exported</code> directory.  </p>
+        <select id="format">
+            <option value="local-markdown">local markdown</option>
+            <option value="local-tmml">local texmacs</option>
+            <option value="xwiki-xwiki">xwiki xwiki</option>
+        </select>
         <div class="stats"><p id="stat"></p><p id="diff"><span class="success" id="front"></span><span class="failure" id="end"></span></p></div>
         <div id="rendered"></div>
         <ul id="list">
