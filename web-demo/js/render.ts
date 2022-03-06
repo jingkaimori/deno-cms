@@ -62,8 +62,9 @@ const mappers = new Processors<processer>({
     }
     return [output];
   },
-  "__plain": mapToText(),
+  "__plain": (_i, r, _c) => {return [r]},
   "text": mapToText(),
+  "rawtext": mapToText(),
   "titletext": mapToText(),
   "link": function name(tree,output,context) {
     const [link] = mapToNode("a")(tree,output,context) as [HTMLAnchorElement];
@@ -82,6 +83,7 @@ export function mapNode(
   iptTree: treeNode<generalNode>,
   resTree: HTMLElement,
   contextStack: contextType[],
+  renderMap: WeakMap<HTMLElement,treeNode<generalNode>>
 ): [HTMLElement, contextType] {
   //console.group(iptTree.parentNode?.nodeName)
   //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
@@ -99,7 +101,7 @@ export function mapNode(
   } /* do nothing */
   else {
     for (const i of iptTree.childs) {
-      mapNode(i, resTree, contextStack);
+      mapNode(i, resTree, contextStack, renderMap);
     }
   }
   //console.groupEnd()

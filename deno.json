@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "lib": ["esnext", "dom", "deno.ns"]
+        "lib": ["esnext", "dom", "deno.ns", "dom.iterable"]
     },
     "fmt":{
         "options": {

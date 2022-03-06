@@ -1,11 +1,13 @@
 import * as xwiki from "../../parsers/xwiki.ts";
-import type { treeNode, rootNode } from "../../macros/macros.ts";
+import type { treeNode, rootNode, generalNode } from "../../macros/macros.ts";
 import * as markdown from "../../parsers/borrowed/markdown.ts"
+import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site, ArticleLocal } from "../../types/repository.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
 import * as path from "https://deno.land/std@0.90.0/path/mod.ts"
 
-const mode = {meta:"local",format:"md"};
+const mode = {meta:"local",format:"tmml"};
+const treeHTMLMap:WeakMap<HTMLElement,treeNode<generalNode>> = new WeakMap();
 if(mode.meta == "xwiki"){
   const res = await fetch("./export/package.xml");
   const parser = new DOMParser();
@@ -60,6 +62,12 @@ async function handleClick(this:HTMLLIElement) {
       renderResult(text,success,leftstr);
       renderDoc(tree);
       //renderDoc(text)
+    }else if(mode.format == "tmml"){
+      const first = await fetch(path.join("./export",filename));
+      const text = await first.text();
+      const {success,leftstr,tree} = tmml.doc(text);
+      renderResult(text,success,leftstr);
+      renderDoc(tree);
     }
   } else { /* do nothing */ }
 }
@@ -105,17 +113,45 @@ function renderResult(content:string,res:boolean,rest:string) {
   }
 }
 
-function renderDoc(tree:Readonly<treeNode<rootNode>>) {
+function onDocEdit(ev:InputEvent) {
+  const range = ev.getTargetRanges()[0]
+  range.startContainer.nodeValue;
+  console.group()
+  console.log(range.startContainer.nodeValue)
+  console.log(range.endContainer.nodeValue)
+  console.groupEnd()
+}
+
+const onMutation:MutationCallback = (record) => {
+  console.log(record)
+}
+
+const observer = new MutationObserver(onMutation)
+/**
+ * convert semantic tree into DOM tree
+ * @param tree 
+ */
+const renderDoc = (tree:Readonly<treeNode<rootNode>>) => {
   console.log(tree);
   // let displayTree = tree.cloneNode(true)
+  const displayTreeRoot = document.createElement("div")
   const [displayTree] = mapNode(
     tree,
-    document.createElement("article"),
+    displayTreeRoot,
     [{ mode: "none" }],
+    treeHTMLMap
   );
+  displayTree.setAttribute("contenteditable","")
+  observer.observe(displayTree,{
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+  })
+  // displayTree.addEventListener("beforeinput",onDocEdit)
   console.log(displayTree);
 
-  let renderedDoc: HTMLDivElement =
+  const renderedDoc: HTMLDivElement =
     (document.querySelector("#rendered") as HTMLDivElement);
     clearChilds(renderedDoc);
     clearChilds((document.querySelector("#diff > #front") as HTMLSpanElement));
