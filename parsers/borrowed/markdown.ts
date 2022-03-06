@@ -4,7 +4,7 @@ import { parser, treeNode, rootNode, generalNode } from "../../macros/macros.ts"
 
 export const doc:parser = (str)=>{
     const lexer = new Lexer({gfm:true});
-    let tree:treeNode<rootNode> = new treeNode<rootNode>("root")
+    const tree:treeNode<rootNode> = new treeNode<rootNode>("root")
     lexer.lex(str)
     .filter((v)=> v.type != "space")
     .forEach((v)=>{return convertToTreeNode(v,tree)});
@@ -19,7 +19,7 @@ export const doc:parser = (str)=>{
 }//://
 
 function convertToTreeNode(obj:marked.Token,parent:treeNode<generalNode>){
-    let node:treeNode = new treeNode(obj.type)
+    const node:treeNode = new treeNode(obj.type)
     node.raw = obj.raw
     if(obj.type == "heading"){
         node.name = "title"
@@ -39,11 +39,11 @@ function convertToTreeNode(obj:marked.Token,parent:treeNode<generalNode>){
             convertToTreeNode(v,node);
         })
     }else if(obj.type == "code"){
-        let textnode = new treeNode("text")
+        const textnode = new treeNode("text")
         textnode.raw = obj.text
         node.appendchild(textnode)
         if(typeof obj.lang !== 'undefined'){
-            let langnode = new treeNode("language")
+            const langnode = new treeNode("language")
             langnode.raw = obj.lang
             node.childs
         }
@@ -52,7 +52,7 @@ function convertToTreeNode(obj:marked.Token,parent:treeNode<generalNode>){
             convertToTreeNode(v,node);
         })
     }else if(obj.type == "codespan"){
-        let textnode = new treeNode("text")
+        const textnode = new treeNode("text")
         textnode.raw = obj.text
         node.appendchild(textnode)
     }else{
