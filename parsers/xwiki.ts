@@ -1,7 +1,7 @@
 import {
     empty,
     eq,
-    generalNode,
+    generalTreeNode,
     getparser,
     getparserfunc,
     match,
@@ -240,7 +240,7 @@ export const doc: parser = (str) => {
     return res;
 };
 
-function postprocess(tree: treeNode<generalNode>) {
+function postprocess(tree: generalTreeNode) {
     if (tree.name == "__list") {
         const delimnode = tree.childs.at(0)?.childByName("__delim");
         const match = delimnode?.raw.match(/(\*\.|\*|1.|;|:)$/)?.at(0);

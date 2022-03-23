@@ -101,7 +101,8 @@ export let doc: parserfunc = particleinmiddle(
 export function postprocess(tree:treeNode) {
   if(tree.childs.length>0 && tree.childs[0].name == "__listitem"){
       let [restree] = listmerge(tree.childs,1);
-      tree.childs = [restree];
+      tree.removeallchilds()
+      tree.appendchild(restree)
   }else{
       for(let i of tree.childs){
       postprocess(i)
@@ -110,7 +111,7 @@ export function postprocess(tree:treeNode) {
   }
 }
 
-function listmerge(iptArr: treeNode[],level:number):[treeNode,number] {
+function listmerge(iptArr: readonly treeNode[],level:number):[treeNode,number] {
 let resTree = new treeNode("list");
 let skip:number=0;
 for(let [i,item] of iptArr.entries()){
@@ -122,14 +123,14 @@ for(let [i,item] of iptArr.entries()){
     if(lth === level){
         let newNode = new treeNode("item")
         newNode.raw = item.raw
-        newNode.childs = item.childs
+        newNode.appendchilds(item.childs)
         resTree.appendchild(newNode)
     }else if(lth > level){
         let newNode = new treeNode("item")
         newNode.raw = item.raw
         let [subResTree,__skip]=listmerge(iptArr.slice(i),lth)
         skip =i+ __skip;
-        newNode.childs.push(subResTree)
+        newNode.appendchild(subResTree)
         resTree.appendchild(newNode)
         
     }else if(lth < level){

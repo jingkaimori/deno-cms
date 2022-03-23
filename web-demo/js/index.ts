@@ -1,5 +1,5 @@
 import * as xwiki from "../../parsers/xwiki.ts";
-import type { treeNode, rootNode, generalNode } from "../../macros/macros.ts";
+import type { rootTreeNode } from "../../macros/macros.ts";
 import * as markdown from "../../parsers/borrowed/markdown.ts"
 import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site } from "../../types/repository.ts";
@@ -7,7 +7,7 @@ import { getArticleTitle, mapNode } from "./render.ts";
 import * as path from "https://deno.land/std@0.90.0/path/mod.ts"
 
 const mode = {meta:"local",format:"tmml"};
-const treeHTMLMap:WeakMap<HTMLElement,treeNode<generalNode>> = new WeakMap();
+const treeHTMLMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
 
 const selectElem = document.querySelector("#format") as HTMLSelectElement
 selectElem.addEventListener("change",(_ev)=>{
@@ -152,7 +152,7 @@ const observer = new MutationObserver(onMutation)
  * convert semantic tree into DOM tree
  * @param tree 
  */
-const renderDoc = (tree:Readonly<treeNode<rootNode>>) => {
+const renderDoc = (tree:Readonly<rootTreeNode>) => {
   console.log(tree);
   // let displayTree = tree.cloneNode(true)
   const displayTreeRoot = document.createElement("div")

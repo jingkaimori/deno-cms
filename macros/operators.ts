@@ -1,10 +1,11 @@
 import {
+    generalTreeNode,
     parsercontextlabel,
     parserevent,
     parserfunc,
     parservar,
 } from "./types.ts";
-import { errormessage, generalNode, treeNode, value } from "./utility.ts";
+import { errormessage, treeNode, value } from "./utility.ts";
 import { consumedstr } from "./internalutility.ts";
 /**
  * this variable turn on such checks
@@ -115,7 +116,7 @@ export function modifycontext(
     modifier: (
         str: string,
         laststr: string,
-        context: treeNode<generalNode>,
+        context: generalTreeNode,
     ) => void,
 ): parserfunc {
     return (str: string, context, stack, event) => {

@@ -1,5 +1,5 @@
 import {
-    generalNode,
+    generalTreeNode,
     match,
     multiple,
     parserfunc,
@@ -27,7 +27,7 @@ export const listitem: parserfunc = symbol(
     "__listitem",
 );
 
-export function postprocess(tree: treeNode<generalNode>) {
+export function postprocess(tree: generalTreeNode) {
     if (tree.childs.length > 0 && tree.childs[0].name == "__listitem") {
         const [restree] = listmerge(tree.childs, 1);
         tree.removeallchilds();

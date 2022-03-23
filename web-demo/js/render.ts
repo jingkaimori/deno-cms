@@ -1,10 +1,10 @@
-import { generalNode, treeNode } from "../../macros/macros.ts";
+import { generalTreeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
 //import katex from "https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.mjs";
 type contextType = Record<string, any>;
 
 type processer = (
-    iptTree: Readonly<treeNode<generalNode>>,
+    iptTree: Readonly<generalTreeNode>,
     resTree: HTMLElement,
     context: contextType,
 ) => [HTMLElement];
@@ -87,10 +87,10 @@ const mappers = new Processors<processer>({
 });
 
 export function mapNode(
-    iptTree: Readonly<treeNode<generalNode>>,
+    iptTree: Readonly<generalTreeNode>,
     resTree: HTMLElement,
     contextStack: contextType[],
-    renderMap: WeakMap<HTMLElement, treeNode<generalNode>>,
+    renderMap: WeakMap<HTMLElement, generalTreeNode>,
 ): [HTMLElement, contextType] {
     //console.group(iptTree.parentNode?.nodeName)
     //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)

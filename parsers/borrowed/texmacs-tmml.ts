@@ -1,8 +1,8 @@
 import type {
-    generalNode,
+    generalTreeNode,
     parser,
     parserevent,
-    rootNode,
+    rootTreeNode,
 } from "../../macros/macros.ts";
 import { treeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
@@ -19,7 +19,7 @@ export const doc: parser = (str) => {
         events,
     );
     return {
-        tree: displayTree as treeNode<rootNode>,
+        tree: displayTree as rootTreeNode,
         stack: [],
         success: true,
         leftstr: "",
@@ -31,7 +31,7 @@ export const metadata = (str: string) => {
     const parser = new DOMParser();
     const tree = parser.parseFromString(str, "text/xml");
     removeBlankText(tree);
-    const res = {};
+    const res: Partial<metadataType> = {};
     scanMetaInfo(tree, res);
     return res;
 };
@@ -56,10 +56,10 @@ function removeBlankText(tree: Node): void {
     removedChilds.every(tree.removeChild, tree);
 }
 
-const scanMetaInfo = (tree: Node, context: {}) => {
+const scanMetaInfo = <T>(tree: Node, context: T): T => {
     // console.group()
     const passSelected = dataMappers.getProcessor(tree.nodeName);
-    let nextContext = context;
+    let nextContext: T | T[keyof T] = context;
     nextContext = passSelected(tree, context);
 
     // console.log(context)
@@ -71,12 +71,16 @@ const scanMetaInfo = (tree: Node, context: {}) => {
 };
 
 export type metadataType = {
-    docinfo: {
+    docinfo?: {
         title: string;
+        authorlist?: {
+            name: string;
+        }[];
     };
+    tmVersion: string;
 };
 
-type passType = (tree: Node, context: any) => any;
+type passType = (tree: Node, context: Record<string, any>) => any;
 
 const dataMappers = new Processors<passType>(
     {
@@ -105,7 +109,7 @@ const dataMappers = new Processors<passType>(
         },
         "TeXmacs": function (t, data) {
             if (t.hasChildNodes()) {
-                const version = (t as Element).getAttribute("version");
+                const version = (t as Element).getAttribute("version") ?? "";
                 data.tmVersion = version;
             } else { /** do nothing */ }
 
@@ -152,12 +156,12 @@ const dataMappers = new Processors<passType>(
 type contextType = Record<string, any>;
 type renderPassType = (
     tree: Node,
-    output: treeNode<generalNode>,
+    output: generalTreeNode,
     context: Readonly<contextType>,
-) => [treeNode<generalNode>, contextType | undefined, parserevent] | [
-    treeNode<generalNode>,
+) => [generalTreeNode, contextType | undefined, parserevent] | [
+    generalTreeNode,
     contextType,
-] | [treeNode<generalNode>];
+] | [generalTreeNode];
 
 const renderMappers = new Processors<renderPassType>(
     {
@@ -309,10 +313,10 @@ const renderMappers = new Processors<renderPassType>(
  */
 function mapNode(
     iptTree: Node,
-    resTree: treeNode<generalNode>,
+    resTree: generalTreeNode,
     contextStack: Array<contextType>,
     eventlist: parserevent[],
-): [treeNode<generalNode>, contextType] {
+): [generalTreeNode, contextType] {
     //console.group(iptTree.parentNode?.nodeName)
     //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
     const passSelected = renderMappers.getProcessor(iptTree.nodeName);

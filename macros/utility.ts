@@ -1,4 +1,4 @@
-import { parser, parsercontextlabel, parserevent, parserfunc, parservar } from "./types.ts";
+import type { parser, parsercontextlabel, parserevent, parserfunc, parservar, nodeType, rootTreeNode } from "./types.ts";
 
 /**
  * 
@@ -11,7 +11,7 @@ export const errormessage = {
 
 export function getparser(parserfunc: parserfunc): parser {
     return (str: string) => {
-        let tree:treeNode<rootNode> = new treeNode<rootNode>("root")
+        let tree: rootTreeNode = new treeNode<nodeType.root>("root")
         let stack: parsercontextlabel[] = [];
         let events: parserevent[] = [];
         const [success, leftstr] = parserfunc(str, tree, stack,events);
@@ -24,24 +24,8 @@ export function getparser(parserfunc: parserfunc): parser {
         };
     };
 }
-export interface generalNode {
-    type:string;
-    parent:treeNode<generalNode>|null;
-    // deno-lint-ignore no-explicit-any
-    auxilary:Record<string,any>;
-}
-export interface nonrootNode extends generalNode {
-    parent:treeNode<generalNode>;
-}
 
-export interface rootNode extends generalNode{
-    type:'root';
-    parent:null;
-    auxilary:Record<never,never>;
-}
-export type treeRootNode = treeNode<rootNode>
-
-export class treeNode<T extends generalNode = nonrootNode> {
+export class treeNode<T extends nodeType.general = nodeType.nonroot> {
     name: T["type"];
     raw: string;
     #childs: treeNode[];
@@ -63,13 +47,13 @@ export class treeNode<T extends generalNode = nonrootNode> {
     childByName(name:string){
         return this.#childs.find((v) => (v.name == name))
     }
-    appendchilds(childsnew: Readonly<treeNode<nonrootNode>[]>): void {
+    appendchilds(childsnew: Readonly<treeNode[]>): void {
         for(const childnew of childsnew){
             childnew.parent = this
         }
         this.#childs = this.#childs.concat(childsnew);
     }
-    appendchild(child: treeNode<nonrootNode>): treeNode {
+    appendchild(child: treeNode): treeNode {
         this.#childs.push(child);
         child.parent = this;
         return child;
@@ -77,7 +61,7 @@ export class treeNode<T extends generalNode = nonrootNode> {
     removeallchilds():void{
         this.#childs = []
     }
-    removechild(child: treeNode<nonrootNode>): void {
+    removechild(child: treeNode): void {
         const candidate = this.#childs.pop();
         if (candidate === child) {
             //successfully removed
@@ -104,7 +88,7 @@ export class treeNode<T extends generalNode = nonrootNode> {
     }
 }
 
-export function value<T>(variable: parservar<T>, context: treeNode<generalNode>): T {
+export function value<T>(variable: parservar<T>, context: treeNode<nodeType.general>): T {
     if (variable instanceof Function) {
         return variable(context);
     } else {

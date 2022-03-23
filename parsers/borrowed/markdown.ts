@@ -1,10 +1,10 @@
 // @deno-types="https://cdn.jsdelivr.net/npm/@types/marked@4.0.1/index.d.ts"
 import { Lexer, marked } from "https://cdn.jsdelivr.net/npm/marked@4.0.10/lib/marked.esm.js";
-import { parser, treeNode, rootNode, generalNode } from "../../macros/macros.ts";
+import { parser, treeNode, nodeType, rootTreeNode, generalTreeNode } from "../../macros/macros.ts";
 
 export const doc:parser = (str)=>{
     const lexer = new Lexer({gfm:true});
-    const tree:treeNode<rootNode> = new treeNode<rootNode>("root")
+    const tree:rootTreeNode = new treeNode<nodeType.root>("root")
     lexer.lex(str)
     .filter((v)=> v.type != "space")
     .forEach((v)=>{return convertToTreeNode(v,tree)});
@@ -18,7 +18,7 @@ export const doc:parser = (str)=>{
     }
 }
 
-function convertToTreeNode(obj:marked.Token,parent:treeNode<generalNode>){
+function convertToTreeNode(obj:marked.Token,parent:generalTreeNode){
     const node:treeNode = new treeNode(obj.type)
     node.raw = obj.raw
     if(obj.type == "heading"){
