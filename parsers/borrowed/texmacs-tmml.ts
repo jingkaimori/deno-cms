@@ -1,27 +1,28 @@
-import type {generalNode, rootNode, parser} from "../../macros/macros.ts"
+import type {generalNode, rootNode, parser, parserevent} from "../../macros/macros.ts"
 import {treeNode} from "../../macros/macros.ts"
 import {Processors} from "../../utils/processer.ts"
 
 export const doc:parser = (str)=>{
     const parser = new DOMParser();
-    let tree = parser.parseFromString(str,"text/xml")
-    tree = removeBlankText(tree)
+    const tree = parser.parseFromString(str,"text/xml")
+    removeBlankText(tree)
+    const events:parserevent[] = []
     const [displayTree,] = mapNode(
-        tree.cloneNode(true), new treeNode("root"), [{mode:"none"}]
+        tree.cloneNode(true), new treeNode("root"), [{mode:"none"}], events
     )
     return{
         tree: displayTree as treeNode<rootNode>,
         stack: [],
         success: true,
         leftstr: '',
-        events: []
+        events
     }
 }
 
 export const metadata = (str:string)=>{
     const parser = new DOMParser();
-    let tree = parser.parseFromString(str,"text/xml")
-    tree = removeBlankText(tree)
+    const tree = parser.parseFromString(str,"text/xml")
+    removeBlankText(tree)
     const res = {}
     scanMetaInfo(tree,res)
     return res
@@ -31,7 +32,7 @@ export const metadata = (str:string)=>{
 /**
  * remove blank text nodes
  */
- function removeBlankText<T extends Node>(tree: T): T{
+ function removeBlankText(tree: Node): void{
     //childNodes is dynamic, remove after scan to count all nodes. 
     const removedChilds = [];
     for(const i of tree.childNodes){
@@ -46,7 +47,6 @@ export const metadata = (str:string)=>{
         }
     }
     removedChilds.every(tree.removeChild,tree);
-    return tree;
 }
 
 const scanMetaInfo = (tree: Node,context: {})=>{
@@ -145,7 +145,7 @@ const dataMappers =  new Processors<passType>(
 type contextType = Record<string,any> 
 type renderPassType =
   (tree:Node,output:treeNode<generalNode>, context:Readonly< contextType >) 
-    => [treeNode<generalNode>, contextType] | [treeNode<generalNode>]
+    => [treeNode<generalNode>, contextType|undefined, parserevent] | [treeNode<generalNode>, contextType] | [treeNode<generalNode>]
    
 
 const renderMappers = new Processors<renderPassType>(
@@ -284,8 +284,11 @@ const renderMappers = new Processors<renderPassType>(
         const unknown = new treeNode("unknown");
         unknown.raw = iptTree.nodeName
         resTree.appendchild(unknown);
-        console.warn("Unknown node:",iptTree.nodeName)
-        return [unknown];
+        return [unknown,undefined,{
+            type:"Unknown node",
+            desc:"Unknown node:"+iptTree.nodeName,
+            context: []
+        }];
     }
 )
 
@@ -293,9 +296,9 @@ const renderMappers = new Processors<renderPassType>(
  * map TMML node to Parser node
  * @todo give passed tree to subnode or raw tree? 
  */
- export function mapNode(
+function mapNode(
         iptTree: Node,resTree: treeNode<generalNode>,
-        contextStack: Array<contextType>
+        contextStack: Array<contextType>, eventlist:parserevent[]
     ): [treeNode<generalNode>,contextType]
 {
     //console.group(iptTree.parentNode?.nodeName)
@@ -304,14 +307,18 @@ const renderMappers = new Processors<renderPassType>(
     const context = contextStack.reduce(
         (pre,cur)=>{ return Object.assign(pre,cur)}
     ,{});
-    let newScope = undefined;
-    [resTree,newScope] = passSelected(iptTree,resTree,context)
+    let newScope = undefined, parserev:parserevent|undefined;
+    [resTree,newScope,parserev] = passSelected(iptTree,resTree,context)
     if(newScope!==undefined){
         contextStack.push(newScope)
     }else{ /* do nothing */ }
+
+    if(parserev!==undefined){
+        eventlist.push(parserev)
+    }else{ /* do nothing */ }
     
     for(const i of iptTree.childNodes){
-        mapNode(i,resTree,contextStack);
+        mapNode(i,resTree,contextStack,eventlist);
     }
     //console.groupEnd()
     return [resTree,context];
