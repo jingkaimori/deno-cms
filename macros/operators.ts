@@ -29,7 +29,7 @@ export function guard(func: parserfunc, type: string, label?:parservar<string>):
           func:guardfunc,
           strremain:str,
         });
-        let res = func(str, context, stack, event);
+        const res = func(str, context, stack, event);
         stack.pop();
         return res;
     }else{
@@ -149,16 +149,6 @@ export function getparserfunc(name:string):parserfunc {
       const func = labelres.func;
       return func(str,ctx,stack, event);
     }
-  }
-}
-
-/**
- * not recommend to use out of macro meta defs
- * @param functions 
- */
- function  __warnSubparserNums(context:Function,...functions: parserfunc[]): void {
-  if(functions.length<2){
-    console.warn(context.name + "has less than two sub-parsers. maybe this is an error.")
   }
 }
 

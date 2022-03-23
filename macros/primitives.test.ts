@@ -21,8 +21,8 @@ Deno.test({
 Deno.test({
     name: "eq() test",
     fn(): void {
-      let equalsingle = getparser(eq("="));
-      let equalmultiple = getparser(eq("==="));
+      const equalsingle = getparser(eq("="));
+      const equalmultiple = getparser(eq("==="));
       assertObjectMatch(
         equalsingle("a"),
         {success:false,leftstr:"a"},
@@ -40,7 +40,7 @@ Deno.test({
   Deno.test({
     name: "eq() with empty string \"\" test",
     fn(): void {
-      let equalsingle = getparser(eq(""));
+      const equalsingle = getparser(eq(""));
       assertObjectMatch(
         equalsingle(""),
         {success:false,leftstr:""},
@@ -55,7 +55,7 @@ Deno.test({
 Deno.test({
   name: "empty() test",
   fn(): void {
-    let emptyf = getparser(empty)
+    const emptyf = getparser(empty)
     assertObjectMatch(
       emptyf("====="),
       {success:false,leftstr:"====="},
