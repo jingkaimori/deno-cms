@@ -1,5 +1,5 @@
 // @deno-types="https://cdn.jsdelivr.net/npm/@types/marked@4.0.1/index.d.ts"
-import { Lexer, marked } from "https://cdn.jsdelivr.net/npm/marked@4.0.8/lib/marked.esm.js";
+import { Lexer, marked } from "https://cdn.jsdelivr.net/npm/marked@4.0.10/lib/marked.esm.js";
 import { parser, treeNode, rootNode, generalNode } from "../../macros/macros.ts";
 
 export const doc:parser = (str)=>{
@@ -16,7 +16,7 @@ export const doc:parser = (str)=>{
         tree,
         events:[]
     }
-}//://
+}
 
 function convertToTreeNode(obj:marked.Token,parent:treeNode<generalNode>){
     const node:treeNode = new treeNode(obj.type)
@@ -45,7 +45,7 @@ function convertToTreeNode(obj:marked.Token,parent:treeNode<generalNode>){
         if(typeof obj.lang !== 'undefined'){
             const langnode = new treeNode("language")
             langnode.raw = obj.lang
-            node.childs
+            // node.childs
         }
     }else if(obj.type == "list"){
         obj.items.forEach((v)=>{
@@ -56,7 +56,7 @@ function convertToTreeNode(obj:marked.Token,parent:treeNode<generalNode>){
         textnode.raw = obj.text
         node.appendchild(textnode)
     }else{
-        node.childs = [];
+        // node.childs = [];
     }
     parent.appendchild(node);
     return node

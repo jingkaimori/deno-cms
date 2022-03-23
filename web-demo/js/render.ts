@@ -80,7 +80,7 @@ const mappers = new Processors<processer>({
 }, (i, r, _c) => {console.warn("unknown node: "+i.name);return [r]});
 
 export function mapNode(
-  iptTree: treeNode<generalNode>,
+  iptTree: Readonly< treeNode<generalNode>>,
   resTree: HTMLElement,
   contextStack: contextType[],
   renderMap: WeakMap<HTMLElement,treeNode<generalNode>>

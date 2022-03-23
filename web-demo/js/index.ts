@@ -74,7 +74,6 @@ async function handleClick(this:HTMLLIElement) {
         xmltree.querySelector("xwikidoc > content")?.firstChild?.nodeValue,
       );
       const {success:res,leftstr:rest,tree} = xwiki.doc(content);
-      xwiki.postprocess(tree);
       renderResult(content,res,rest);
       renderDoc(tree);
     }else if(mode.format == "md"){

@@ -9,6 +9,7 @@ import {
   neq,
   not,
   or,
+  parser,
   parserfunc,
   seq,
   symbol,
@@ -103,7 +104,7 @@ const macrobegin: parserfunc = seq(
 const macroend: parserfunc = seq(
   eq("{{/"),
   eq((context) => {
-    const namenode = context.childs.find((v) => (v.name == "__name"));
+    const namenode = context.childByName("__name");
     return namenode?.raw ?? "";
   }),
   eq("}}"),
@@ -157,17 +158,11 @@ export const inline: parserfunc = symbol(
   "text",
 );
 
-export const listitem: parserfunc = symbol(
-  seq(multiple(match(/[*1;.:]/), 1), inline),
-  "__listitem",
-);
-
 export const followedlist: parserfunc = symbol(
   seq(
     match(/[\n\r]/),
     (s, context, stack, e) => {
-      const namenode = context?.parent?.childs.at(0)?.childs
-        .find((v) => (v.name == "__delim"));
+      const namenode = context?.parent?.childs.at(0)?.childByName("__delim");
       const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
       let lthval = depth ?? 1;
       let newlth = lthval + 1;
@@ -186,7 +181,7 @@ export const listitemnew: parserfunc = symbol(
     symbol(
       multiple(match(/(\*\.|\*|1\.|1|;|:)/),(context) => {
         const namenode = context?.parent?.parent?.parent?.
-          childs.at(0)?.childs.find((v) => (v.name == "__delim"));
+          childs.at(0)?.childByName("__delim");
         const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length
         return (depth ?? 0)+1;
       }),
@@ -197,17 +192,6 @@ export const listitemnew: parserfunc = symbol(
   "__listitemnew",
 );
 
-// export const list: parserfunc = function __list(str, context, stack) {
-//   const cascadedlist = multiple(seq(match(/[\n\r]/), __list), 0, 2);
-//   return symbol(
-//     seq(
-//       listitemnew,
-//       cascadedlist,
-//       multiple(seq(followedlist, cascadedlist)),
-//     ),
-//     "__list",
-//   )(str, context, stack);
-// };
 const cascadedlist = multiple(seq(match(/[\n\r]/), getparserfunc("__list")), 0, 2);
 export const list: parserfunc = symbol(
   seq(
@@ -237,17 +221,18 @@ const newline: parserfunc = or(
   paragraph,
 );
 
-export const doc = getparser(particleinmiddle(
-  newline,
-  linebreak,
-));
+export const doc:parser = (str) =>{
+  const res = getparser(particleinmiddle(
+    newline,
+    linebreak,
+  ))(str);
+  postprocess(res.tree)
+  return res
+} ;
 
-export function postprocess(tree: treeNode<generalNode>) {
-  if (tree.childs.length > 0 && tree.childs[0].name == "__listitem") {
-    let [restree] = listmerge(tree.childs, 1);
-    tree.childs = [restree];
-  }else if( tree.name == "__list"){
-    const delimnode = tree.childs.at(0)?.childs.find((v) => (v.name == "__delim"))
+function postprocess(tree: treeNode<generalNode>) {
+  if( tree.name == "__list"){
+    const delimnode = tree.childs.at(0)?.childByName("__delim");
     const match = delimnode?.raw.match(/(\*\.|\*|1.|;|:)$/)?.at(0);
     switch (match) {
       case "*":
@@ -265,12 +250,8 @@ export function postprocess(tree: treeNode<generalNode>) {
         tree.name = "list";
         break;
     }
-    for (let i of tree.childs) {
-      postprocess(i);
-    }
-
   }else if( tree.name == "__listitemnew"){
-    const delimnode = tree.childs.find((v) => (v.name == "__delim"))
+    const delimnode = tree.childByName("__delim")
     const match = delimnode?.raw.match(/(\*\.|\*|1.|;|:)$/)?.at(0);
     switch (match) {
       case "*":
@@ -293,73 +274,10 @@ export function postprocess(tree: treeNode<generalNode>) {
     if(delimnode){
       tree.removechild(delimnode)
     }
-    for (let i of tree.childs) {
-      postprocess(i);
-    }
-  } else {
-    for (let i of tree.childs) {
-      postprocess(i);
-    }
+  } else { /* nothing */ }
+
+  for (const i of tree.childs) {
+    postprocess(i);
   }
 }
 
-function listmerge(iptArr: treeNode[], level: number): [treeNode, number] {
-  let resTree = new treeNode("");
-  let skip: number = 0;
-  let lastNode = new treeNode("item");
-  for (let [i, item] of iptArr.entries()) {
-    if (i < skip) {
-      continue;
-    }
-    let match = item.raw.match(/^[*1:;]*([*1:;])(\.(:))?/);
-    let lth = match?.at(0)?.length || -1;
-    let flag = match?.at(3) || match?.at(1) || "*";
-    if (resTree.name == "") {
-      switch (flag) {
-        case "*":
-          resTree.name = "ulist";
-          break;
-        case "1":
-          resTree.name = "olist";
-          break;
-        case ";":
-        case ":":
-        case ".":
-          resTree.name = "dlist";
-          break;
-        default:
-          resTree.name = "list";
-          break;
-      }
-    }
-    if (lth === level) {
-      let newNode = new treeNode("item");
-      switch (flag) {
-        case "*":
-        case "1":
-          newNode.name = "item";
-          break;
-        case ";":
-          resTree.name = "dt";
-          break;
-        case ":":
-          resTree.name = "dd";
-          break;
-        default:
-          resTree.name = "item";
-          break;
-      }
-      newNode.raw = item.raw;
-      newNode.childs = item.childs;
-      resTree.appendchild(newNode);
-      lastNode = newNode;
-    } else if (lth > level) {
-      let [subResTree, __skip] = listmerge(iptArr.slice(i), lth);
-      skip = i + __skip;
-      lastNode.appendchild(subResTree);
-    } else if (lth < level) {
-      return [resTree, i];
-    }
-  }
-  return [resTree, iptArr.length];
-}
