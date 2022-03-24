@@ -18,6 +18,13 @@ export const doc:parser = (str)=>{
     }
 }
 
+/**
+ * 
+ * @param obj 
+ * @param parent 
+ * @returns 
+ * @todo handle escape character
+ */
 function convertToTreeNode(obj:marked.Token,parent:generalTreeNode){
     const node:treeNode = new treeNode(obj.type)
     node.raw = obj.raw
@@ -32,6 +39,9 @@ function convertToTreeNode(obj:marked.Token,parent:generalTreeNode){
         }
     }else if(obj.type == "link"){
         node.auxilary = {dest:obj.href,title:obj.title}
+    }else if(obj.type == "escape"){
+        node.name = "rawtext"
+        node.raw = obj.text
     }
 
     if("tokens" in obj && typeof obj.tokens !== 'undefined'){
