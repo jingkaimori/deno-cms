@@ -1,10 +1,10 @@
 // @deno-types="https://cdn.jsdelivr.net/npm/@types/marked@4.0.1/index.d.ts"
 import { Lexer, marked } from "https://cdn.jsdelivr.net/npm/marked@4.0.10/lib/marked.esm.js";
-import { parser, treeNode, nodeType, rootTreeNode, generalTreeNode } from "../../macros/macros.ts";
+import { parser, treeNode, rootTreeNode, generalTreeNode } from "../../macros/macros.ts";
 
 export const doc:parser = (str)=>{
     const lexer = new Lexer({gfm:true});
-    const tree:rootTreeNode = new treeNode<nodeType.root>("root")
+    const tree:rootTreeNode = new treeNode("root")
     lexer.lex(str)
     .filter((v)=> v.type != "space")
     .forEach((v)=>{return convertToTreeNode(v,tree)});
@@ -37,25 +37,17 @@ function convertToTreeNode(obj:marked.Token,parent:generalTreeNode){
         }else{
             node.name = "ulist"
         }
-    }else if(obj.type == "link"){
-        node.auxilary = {dest:obj.href,title:obj.title}
     }else if(obj.type == "escape"){
         node.name = "rawtext"
         node.raw = obj.text
     }
 
-    if("tokens" in obj && typeof obj.tokens !== 'undefined'){
-        obj.tokens.forEach((v)=>{
-            convertToTreeNode(v,node);
-        })
-    }else if(obj.type == "code"){
+    if(obj.type == "code"){
         const textnode = new treeNode("text")
         textnode.raw = obj.text
         node.appendchild(textnode)
         if(typeof obj.lang !== 'undefined'){
-            const langnode = new treeNode("language")
-            langnode.raw = obj.lang
-            // node.childs
+            textnode.auxilary.lang = obj.lang
         }
     }else if(obj.type == "list"){
         obj.items.forEach((v)=>{
@@ -65,6 +57,47 @@ function convertToTreeNode(obj:marked.Token,parent:generalTreeNode){
         const textnode = new treeNode("text")
         textnode.raw = obj.text
         node.appendchild(textnode)
+    }else if(obj.type == "table"){
+        const head = new treeNode("trow")
+        for(const header of obj.header){
+            const headcellnode = new treeNode("theadcell")
+            header.tokens.forEach((v)=>{
+                convertToTreeNode(v,headcellnode);
+            })
+            head.appendchild(headcellnode)
+        }
+        node.appendchild(head);
+
+        for(const row of obj.rows){
+            const rownode = new treeNode("trow")
+            for(const cell of row){
+                const cellnode = new treeNode("tcell")
+                cell.tokens.forEach((v)=>{
+                    convertToTreeNode(v,cellnode);
+                })
+                rownode.appendchild(cellnode)
+            }
+            node.appendchild(rownode)
+        }
+    }else if(obj.type == "link"){
+        const hrefnode = new treeNode("linkdest")
+        hrefnode.raw = obj.href
+        node.appendchild(hrefnode)
+        
+        const hintnode = new treeNode("hint")
+        hintnode.raw = obj.title
+        hrefnode.raw = obj.href
+        node.appendchild(hintnode)
+
+        const textnode = new treeNode("linktext")
+        obj.tokens.forEach((v)=>{
+            convertToTreeNode(v,textnode);
+        })
+        node.appendchild(textnode)
+    }else if("tokens" in obj && typeof obj.tokens !== 'undefined'){
+        obj.tokens.forEach((v)=>{
+            convertToTreeNode(v,node);
+        })
     }else{
         // node.childs = [];
     }

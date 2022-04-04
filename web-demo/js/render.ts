@@ -2,6 +2,24 @@ import { generalTreeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
 //import katex from "https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.mjs";
 type contextType = Record<string, any>;
+type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "toc"
+
+
+function mapToNode(name: allowedHTMLNodeType): processer {
+    return function (_tree, output, _context) {
+        const title = document.createElement(name);
+        output.append(title);
+        return [title];
+    };
+}
+const mapToText: processer = (tree, output, _context) => {
+        const rawtext = tree.raw;
+        const text = document.createTextNode(rawtext);
+        output.append(text);
+        return [output];
+    };
+
+const omitTreeNode: processer = (_i,r,_c) => [r]
 
 type processer = (
     iptTree: Readonly<generalTreeNode>,
@@ -13,7 +31,7 @@ const mappers = new Processors<processer>({
         // const match = tree.raw.match(/^=+/);
         // let lth = match?.at(0)?.length;
         const lth = tree.auxilary.level;
-        if (typeof lth == "number" || lth instanceof Number) {
+        if (typeof lth == "number") {
             const title = document.createElement("h" + lth.toString());
             output.append(title);
             return [title];
@@ -25,7 +43,6 @@ const mappers = new Processors<processer>({
     },
     "root": mapToNode("article"),
     "paragraph": mapToNode("p"),
-    "hyperlink": mapToNode("a"),
     "ulist": mapToNode("ul"),
     "olist": mapToNode("ol"),
     "dlist": mapToNode("dl"),
@@ -47,12 +64,17 @@ const mappers = new Processors<processer>({
         output.append(title);
         return [title];
     },
-    "__label": mapToText(),
+    "table":mapToNode("table"),
+    "theadcell":mapToNode("th"),
+    "trow":mapToNode("tr"),
+    "tcell":mapToNode("td"),
+    "linktext": omitTreeNode,
     "__path": function (tree, output, _context) {
-        if (/^url:(.*)/.test(tree.raw)) {
+        const res = /^url:(.*)/.exec(tree.raw)
+        if (res) {
             (output as HTMLAnchorElement).setAttribute(
                 "href",
-                (/^url:(.*)/.exec(tree.raw) as RegExpExecArray)[1],
+                res[1],
             );
         } else {
             (output as HTMLAnchorElement).setAttribute(
@@ -62,28 +84,28 @@ const mappers = new Processors<processer>({
         }
         return [output];
     },
-    "__plain": (_i, r, _c) => {
-        return [r];
+    "__plain": omitTreeNode,
+    "text": mapToText,
+    "rawtext": mapToText,
+    "titletext": mapToText,
+    "link":  mapToNode("a"),
+    "linkdest":(tree,output)=>{
+        output.setAttribute("href", String( tree.raw));
+        return [output]
     },
-    "text": mapToText(),
-    "rawtext": mapToText(),
-    "titletext": mapToText(),
-    "link": function name(tree, output, context) {
-        const [link] = mapToNode("a")(tree, output, context) as [
-            HTMLAnchorElement,
-        ];
-        link.setAttribute("href", tree.auxilary.dest);
-        link.setAttribute("tooltip", tree.auxilary.title);
-        return [link];
+    "hint":(tree,output)=>{
+        output.setAttribute("title", String( tree.raw));
+        return [output]
     },
     "blockquote": mapToNode("blockquote"),
     "strong": mapToNode("strong"),
     "em": mapToNode("em"),
     "codespan": mapToNode("code"),
     "del": mapToNode("del"),
-}, (i, r, _c) => {
+}, (i, r, c) => {
     console.warn("unknown node: " + i.name);
-    return [r];
+    console.info(i)
+    return omitTreeNode(i,r,c);
 });
 
 export function mapNode(
@@ -115,21 +137,6 @@ export function mapNode(
     return [resTree, context];
 }
 
-function mapToNode(name: string): processer {
-    return function (_tree, output, _context) {
-        const title = document.createElement(name);
-        output.append(title);
-        return [title];
-    };
-}
-function mapToText(): processer {
-    return (tree, output, _context) => {
-        const rawtext = tree.raw;
-        const text = document.createTextNode(rawtext);
-        output.append(text);
-        return [output];
-    };
-}
 export function getArticleTitle(filename: string) {
     return ("./export/" + filename.replace(/\./g, "/") + ".xml");
 }
