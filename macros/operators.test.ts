@@ -207,10 +207,12 @@ Deno.test({
       symbol(multiple(eq("abcd")), "title"),
       eq("="),
     ));
-    assertObjectMatch(parser("=abcd="), {
+    const res = parser("=abcd=")
+    assertObjectMatch(res, {
       success:true,
-      leftstr:"",
-      tree:{
+      leftstr:""})
+    assertObjectMatch(res.tree.toPlainObject(),
+      {
         childs:{
           "0":{
             raw:"abcd",
@@ -218,7 +220,7 @@ Deno.test({
           }
         }
       }
-    });
+    );
   },
 });
 
@@ -230,18 +232,18 @@ Deno.test({
       symbol(seq(eq("ab"), eq("cd")), "title"),
       eq("="),
     ));
-    assertObjectMatch(parserfunction("=abcd="), {
+    const res = parserfunction("=abcd=")
+    assertObjectMatch(res, {
       success:true,
-      leftstr:"",
-      tree:{
+      leftstr:""})
+    assertObjectMatch(res.tree.toPlainObject(), {
         childs:{
           "0":{
             raw:"abcd",
             name:"title"
           }
         }
-      }
-    });
+      } );
   },
 });
 
