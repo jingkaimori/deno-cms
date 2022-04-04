@@ -11,13 +11,12 @@ const treeHTMLMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
 
 const selectElem = document.querySelector("#format") as HTMLSelectElement
 selectElem.addEventListener("change",(_ev)=>{
-  console.log("emit")
   if(selectElem.value == "local-tmml"){
     mode.meta="local"
     mode.format="tmml"
   }else if(selectElem.value == "local-markdown"){
     mode.meta="local"
-    mode.format="markdown"
+    mode.format="md"
   }else if(selectElem.value == "xwiki-xwiki"){
     mode.meta="xwiki"
     mode.format="xwiki"
@@ -44,7 +43,7 @@ const onFormatChange = async () => {
     });
   } else if(mode.meta == "local") {
     const res = await fetch("./export/meta.json");
-    const tree = JSON.parse(await res.text()) as Site;
+    const tree = await res.json() as Site;
     const files = tree.articles;
     files.forEach((v) => {
       const li = document.createElement("li");
@@ -156,12 +155,14 @@ const renderDoc = (tree:Readonly<rootTreeNode>) => {
   console.log(tree);
   // let displayTree = tree.cloneNode(true)
   const displayTreeRoot = document.createElement("div")
+  console.groupCollapsed()
   const [displayTree] = mapNode(
     tree,
     displayTreeRoot,
     [{ mode: "none" }],
     treeHTMLMap
   );
+  console.groupEnd()
   displayTree.setAttribute("contenteditable","")
   observer.observe(displayTree,{
     subtree: true,
