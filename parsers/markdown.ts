@@ -1,18 +1,12 @@
 import {
     empty,
     eq,
-    match,
     multiple,
-    neq,
     not,
     or,
-    parserfunc,
-    parservar,
     seq,
     symbol,
-    treeNode,
     getparser,
-  value,
   } from "../macros/macros.ts";
 
 /** 不换行的文本 */
