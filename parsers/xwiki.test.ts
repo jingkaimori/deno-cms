@@ -1,77 +1,76 @@
-import { assertEquals,assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
-import { hyperlink, list, listitemnew, macrowithoutbody, postprocess, title, titletext } from "./xwiki.ts";
-import { match, seq, treeNode, getparser } from "../macros/macros.ts";
+import {
+    assertObjectMatch,
+} from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { doc, hyperlink, title, titletext } from "./xwiki.ts";
+import { getparser } from "../macros/macros.ts";
 
 Deno.test({
-  name: "title() test",
-  fn(): void {
-    const titleparser = getparser(title)
-    assertObjectMatch(titleparser("=== title ==="), {
-      success:true,
-      leftstr:""
-    });
-    assertObjectMatch(titleparser("=== title =="), {
-      success:false,
-      leftstr:"=== title =="
-    });
-  },
+    name: "title() test",
+    fn(): void {
+        const titleparser = getparser(title);
+        assertObjectMatch(titleparser("=== title ==="), {
+            success: true,
+            leftstr: "",
+        });
+        assertObjectMatch(titleparser("=== title =="), {
+            success: false,
+            leftstr: "=== title ==",
+        });
+    },
 });
 Deno.test({
-  name: "titletext() test",
-  fn(): void {
-    const titletextparser=getparser(titletext)
-    assertObjectMatch(titletextparser(" title "), {
-      success:true,
-      leftstr:""
-    });
-    assertObjectMatch(titletextparser(" title ="), {
-      success:true,
-      leftstr:"="
-    });
-    assertObjectMatch(titletextparser("= title "), {
-      success:false,
-      leftstr:"= title "
-    });
-  },
+    name: "titletext() test",
+    fn(): void {
+        const titletextparser = getparser(titletext);
+        assertObjectMatch(titletextparser(" title "), {
+            success: true,
+            leftstr: "",
+        });
+        assertObjectMatch(titletextparser(" title ="), {
+            success: true,
+            leftstr: "=",
+        });
+        assertObjectMatch(titletextparser("= title "), {
+            success: false,
+            leftstr: "= title ",
+        });
+    },
 });
 
 Deno.test({
-  name: "hyperlink() test",
-  fn(): void {
-    assertObjectMatch(getparser(hyperlink)("[[title >> url]]"), {
-      success:true,
-      leftstr:"",
-      tree:{
-        childs:{
-          "0":{
-            name:"hyperlink",
-            childs:{
-              "0":{
-                name:"__label",
-                raw:"title "
-              },
-              "1":{
-                name:"__path",
-                raw:" url"
-              }
-            }
-          }
-        }
-      }
-    });
-  },
+    name: "hyperlink() test",
+    fn(): void {
+        const res = getparser(hyperlink)("[[title >> url]]");
+        assertObjectMatch(res, {
+            success: true,
+            leftstr: "",
+        });
+        assertObjectMatch(res.tree.toPlainObject(), {
+            childs: {
+                "0": {
+                    name: "link",
+                    childs: {
+                        "0": {
+                            name: "__label",
+                            raw: "title ",
+                        },
+                        "1": {
+                            name: "__path",
+                            raw: " url",
+                        },
+                    },
+                },
+            },
+        });
+    },
 });
 
-
 Deno.test({
-  name: "list() test",
-  fn(): void {
-    let ALT1 = new treeNode("root")
-    seq(match(/[\n\r]/), list)("\n** ca",ALT1,[],[])
-    console.log(ALT1.toString())
-    ALT1 = new treeNode("root")
-    assertEquals(list(
-      "\
+    name: "list() test",
+    fn(): void {
+        assertObjectMatch(
+            doc(
+"\
 * c\n\
 * e\n\
 ** ca\n\
@@ -79,44 +78,79 @@ Deno.test({
 *** cca\n\
 * c\n\
 * c\n",
-      ALT1,[],[]), [
-      true,
-      "\n",
-    ]);
-    postprocess(ALT1)
-    console.log(ALT1.toString(4))
-  },
+            ),
+            {
+                success: true,
+                leftstr: "\n",
+            },
+        );
+    },
 });
 Deno.test({
-  name: "ordered list() test",
-  fn(): void {
-    let ALT1 = new treeNode("root")
-    assertEquals(list(
-      "\
+    name: "ordered list() test",
+    fn(): void {
+        const res = doc(
+"\
 1. 设置领地：\n\
-11. 先用一块木头斧子左键敲击一方块设置点A，右键敲击一方块设置点B（可以输入{{code}}/res select size{{/code}}查看所选区域的大小）；\n\
-11. 之后输入{{code}}/res create 123{{/code}}（例）\n\
-11. 这样设置后，就形成了[以AB连线为体对角线的长方体的][名为123的]领地（包括A、B所在边），设置领地需要金钱\n",
-      ALT1,[],[]), [
-      true,
-      "\n",
-    ]);
-    postprocess(ALT1)
-    console.log(ALT1.toString(4))
-  },
+11. 先用一块木头斧子左键敲击一方块设置点A，\n",
+        );
+        assertObjectMatch(
+            res,
+            {
+                success: true,
+                leftstr: "\n",
+            },
+        );
+        assertObjectMatch(
+            res.tree.toPlainObject(),
+            {
+                childs:{
+                    "0":{
+                        name:"olist",
+                        childs:{
+                            "0":{
+                                name:"item",
+                                childs:{
+                                    "0":{
+                                        name:"text"
+                                    }
+                                }
+                            },
+                            "1":{
+                                name:"olist"
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    },
 });
 Deno.test({
-  name: "macro() test",
-  fn(): void {
-    let ALT1 =new treeNode("root")
-    console.log("{{toc/}}")
-    assertEquals(macrowithoutbody(
-      "{{toc/}}",
-      ALT1,[],[]), [
-      true,
-      "",
-    ]);
-    postprocess(ALT1)
-    console.log(ALT1.toString(4))
-  },
+    name: "macro() test",
+    fn(): void {
+        const res = doc(
+            "{{toc/}}",
+        );
+        assertObjectMatch(
+            res,
+            {
+                success: true,
+                leftstr: "",
+            },
+        );
+        assertObjectMatch(
+            res.tree.toPlainObject(),
+            {
+                childs:{
+                    "0":{
+                        name:"template",
+                        childs:{
+                        }
+                    }
+                }
+            }
+        )
+        console.log(res.tree.toString());
+    },
 });

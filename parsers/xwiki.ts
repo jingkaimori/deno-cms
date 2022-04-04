@@ -13,7 +13,6 @@ import {
     parserfunc,
     seq,
     symbol,
-    treeNode,
 } from "../macros/macros.ts";
 
 const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
@@ -61,7 +60,7 @@ export const hyperlink: parserfunc = symbol(
         ),
         eq("]]"),
     ),
-    "hyperlink",
+    "link",
 );
 
 export const plainchar: parserfunc = match(/[^\n\r\[]/);
@@ -70,6 +69,10 @@ const escapetext: parserfunc = symbol(multiple(neq("}}}")), "__plain");
 const escape: parserfunc = symbol(
     seq(eq("{{{"), escapetext, eq("}}}")),
     "rawtext",
+);
+const escapechar: parserfunc = seq(
+    eq("~"),
+    symbol(not(empty), "rawtext"),
 );
 
 const horizonal = multiple(eq("-"), 4);
@@ -144,21 +147,23 @@ const macroinline: parserfunc = symbol(
 );
 
 export const plain: parserfunc = symbol(
-    multiple(not(or(hyperlink, escape, macrobegin, linebreak, empty)), 1),
-    "__plain",
-);
-
-export const inline: parserfunc = symbol(
     multiple(
-        or(
-            hyperlink,
-            macroinline,
-            macrowithoutbody,
-            plain,
-        ),
+        not(or(hyperlink, escape, escapechar, macrobegin, linebreak, empty)),
         1,
     ),
     "text",
+);
+
+export const inline: parserfunc = multiple(
+    or(
+        hyperlink,
+        macroinline,
+        macrowithoutbody,
+        escape,
+        escapechar,
+        plain,
+    ),
+    1,
 );
 
 export const followedlist: parserfunc = symbol(
@@ -214,6 +219,56 @@ export const list: parserfunc = symbol(
 
 const br = symbol(match(/[\n\r]/), "br");
 
+const tableinline: parserfunc = multiple(
+    or(
+        hyperlink,
+        macroinline,
+        macrowithoutbody,
+        escape,
+        escapechar,
+        symbol(
+            multiple(
+                not(or(
+                    hyperlink,
+                    escape,
+                    escapechar,
+                    macrobegin,
+                    eq("|"),
+                    linebreak,
+                    empty,
+                )),
+                1,
+            ),
+            "text",
+        ),
+    ),
+);
+const tablecell = seq(
+    eq("|"),
+    symbol(
+        tableinline,
+        "tcell",
+    ),
+);
+
+const tableheadcell = seq(
+    eq("|="),
+    symbol(
+        tableinline,
+        "theadcell",
+    ),
+);
+
+const tablerow = symbol(
+    seq(multiple(or(tableheadcell, tablecell)), linebreak),
+    "trow",
+);
+
+const table = symbol(
+    multiple(tablerow,1),
+    "table",
+);
+
 const paragraph = symbol(
     or(
         list,
@@ -228,6 +283,8 @@ const newline: parserfunc = or(
     horizonal,
     macroblock,
     macrowithoutbody,
+    list,
+    table,
     paragraph,
 );
 

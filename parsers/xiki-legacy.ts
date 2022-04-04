@@ -30,7 +30,7 @@ export const listitem: parserfunc = symbol(
 export function postprocess(tree: generalTreeNode) {
     if (tree.childs.length > 0 && tree.childs[0].name == "__listitem") {
         const [restree] = listmerge(tree.childs, 1);
-        tree.removeallchilds();
+        tree.clearChilds();
         tree.appendchild(restree);
     } else if (tree.name == "__list") {
         const delimnode = tree.childs.at(0)?.childByName("__delim");
