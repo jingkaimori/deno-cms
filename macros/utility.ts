@@ -1,3 +1,4 @@
+import { plainDocument } from "../types/data.ts";
 import type { parser, parsercontextlabel, parserevent, parserfunc, parservar, nodeType, rootTreeNode } from "./types.ts";
 
 /**
@@ -11,9 +12,9 @@ export const errormessage = {
 
 export function getparser(parserfunc: parserfunc): parser {
     return (str: string) => {
-        let tree: rootTreeNode = new treeNode<nodeType.root>("root")
-        let stack: parsercontextlabel[] = [];
-        let events: parserevent[] = [];
+        const tree: rootTreeNode = new treeNode<nodeType.root>("root")
+        const stack: parsercontextlabel[] = [];
+        const events: parserevent[] = [];
         const [success, leftstr] = parserfunc(str, tree, stack,events);
         return {
             tree,
@@ -58,7 +59,7 @@ export class treeNode<T extends nodeType.general = nodeType.nonroot> {
         child.parent = this;
         return child;
     }
-    removeallchilds():void{
+    clearChilds():void{
         this.#childs = []
     }
     removechild(child: treeNode): void {
@@ -76,7 +77,26 @@ export class treeNode<T extends nodeType.general = nodeType.nonroot> {
         }
     }
     toString(space?: string | number): string {
-        return JSON.stringify(this, ["name", "raw", "childs"], space);
+        return JSON.stringify(this.toPlainObject() ,undefined , space);
+    }
+    toPlainObject():plainDocument{
+        const childsres:plainDocument[] = 
+            this.#childs.map((val)=>val.toPlainObject())
+        return {
+            name:this.name,
+            raw:this.raw,
+            auxilary:this.auxilary,
+            childs:childsres
+        }
+    }
+    static fromPlainObject(obj:plainDocument):treeNode{
+        const childsres:treeNode[] = 
+            obj.childs.map((val)=>this.fromPlainObject(val))
+        const res:treeNode = new treeNode(obj.name)
+        res.auxilary = obj.auxilary
+        res.raw = obj.raw
+        res.appendchilds(childsres)
+        return res;
     }
     clone(): treeNode<T> {
         const retval = new treeNode<T>(this.name);
