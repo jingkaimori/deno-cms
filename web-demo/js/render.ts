@@ -13,7 +13,9 @@ function mapToNode(name: allowedHTMLNodeType): processer {
 }
 const mapToText: processer = (tree, output, _context) => {
         const rawtext = tree.raw;
-        const text = document.createTextNode(rawtext);
+        const text = document.createElement("span");
+        text.innerText = rawtext;
+        text.setAttribute("contenteditable","");
         output.append(text);
         return [output];
     };

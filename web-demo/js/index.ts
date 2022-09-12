@@ -133,17 +133,13 @@ const renderResult = (content:string,res:boolean,rest:string) => {
   }
 }
 
-function _onDocEdit(ev:InputEvent) {
-  const range = ev.getTargetRanges()[0]
-  range.startContainer.nodeValue;
-  console.group()
-  console.log(range.startContainer.nodeValue)
-  console.log(range.endContainer.nodeValue)
-  console.groupEnd()
-}
-
-const onMutation:MutationCallback = (record) => {
-  console.log(record)
+const onMutation:MutationCallback = (records) => {
+  for (const record of records) {
+    if (record.type == "childList") {
+      
+    }
+  }
+  console.log(records)
 }
 
 const observer = new MutationObserver(onMutation)
@@ -163,14 +159,12 @@ const renderDoc = (tree:Readonly<rootTreeNode>) => {
     treeHTMLMap
   );
   console.groupEnd()
-  displayTree.setAttribute("contenteditable","")
   observer.observe(displayTree,{
     subtree: true,
     childList: true,
     characterData: true,
     attributes: true,
   })
-  // displayTree.addEventListener("beforeinput",onDocEdit)
   console.log(displayTree);
 
   const renderedDoc: HTMLDivElement =
