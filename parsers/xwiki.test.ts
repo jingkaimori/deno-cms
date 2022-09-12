@@ -1,6 +1,4 @@
-import {
-    assertObjectMatch,
-} from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { assertObjectMatch, } from "../deps.ts";
 import { doc, hyperlink, title, titletext } from "./xwiki.ts";
 import { getparser } from "../macros/macros.ts";
 

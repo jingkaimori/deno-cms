@@ -1,4 +1,4 @@
-import { assertThrows,assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { assertThrows,assertObjectMatch } from "../deps.ts";
 import { getparserfunc, multiple, not, or, seq, symbol } from "./operators.ts";
 import { empty, eq } from "./primitives.ts";
 import { getparser } from "./utility.ts"

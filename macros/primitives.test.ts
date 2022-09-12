@@ -1,4 +1,4 @@
-import { assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { assertObjectMatch } from "../deps.ts";
 import { empty, eq,match } from "./primitives.ts";
 import { getparser } from "./utility.ts";
 

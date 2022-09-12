@@ -1,6 +1,5 @@
 import { generalTreeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
-//import katex from "https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.mjs";
 type contextType = Record<string, any>;
 type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "toc"
 

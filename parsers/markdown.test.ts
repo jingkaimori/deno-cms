@@ -1,4 +1,4 @@
-import { assertEquals,assertObjectMatch } from "https://deno.land/std@0.90.0/testing/asserts.ts";
+import { assertEquals,assertObjectMatch } from "../deps.ts";
 import { match, seq, treeNode, parser } from "../macros/macros.ts";
 import * as local from "./markdown.ts";
 import * as borrow from "./borrowed/markdown.ts"

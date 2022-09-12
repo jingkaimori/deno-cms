@@ -1,5 +1,4 @@
-// @deno-types="https://cdn.jsdelivr.net/npm/@types/marked@4.0.1/index.d.ts"
-import { Lexer, marked } from "https://cdn.jsdelivr.net/npm/marked@4.0.10/lib/marked.esm.js";
+import { Lexer, marked } from "../../deps.ts";
 import { parser, treeNode, rootTreeNode, generalTreeNode } from "../../macros/macros.ts";
 
 export const doc:parser = (str)=>{
