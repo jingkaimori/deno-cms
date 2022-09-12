@@ -26,7 +26,7 @@ export function getparser(parserfunc: parserfunc): parser {
     };
 }
 
-export class treeNode<T extends nodeType.general = nodeType.nonroot> {
+export class treeNode<T extends nodeType.general = nodeType.general> {
     name: T["type"];
     raw: string;
     #childs: treeNode[];
