@@ -1,4 +1,4 @@
-import { generalTreeNode } from "../../macros/macros.ts";
+import { semanticsTreeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
 type contextType = Record<string, any>;
 type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "toc"
@@ -23,7 +23,7 @@ const mapToText: processer = (tree, output, _context) => {
 const omitTreeNode: processer = (_i,r,_c) => [r]
 
 type processer = (
-    iptTree: Readonly<generalTreeNode>,
+    iptTree: Readonly<semanticsTreeNode>,
     resTree: HTMLElement,
     context: contextType,
 ) => [HTMLElement];
@@ -110,10 +110,10 @@ const mappers = new Processors<processer>({
 });
 
 export function mapNode(
-    iptTree: Readonly<generalTreeNode>,
+    iptTree: Readonly<semanticsTreeNode>,
     resTree: HTMLElement,
     contextStack: contextType[],
-    renderMap: WeakMap<HTMLElement, generalTreeNode>,
+    renderMap: WeakMap<HTMLElement, semanticsTreeNode>,
 ): [HTMLElement, contextType] {
     //console.group(iptTree.parentNode?.nodeName)
     //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)

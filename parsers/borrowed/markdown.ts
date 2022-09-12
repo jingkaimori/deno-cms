@@ -1,5 +1,5 @@
 import { Lexer, marked } from "../../deps.ts";
-import { parser, treeNode, rootTreeNode, generalTreeNode } from "../../macros/macros.ts";
+import { parser, treeNode, rootTreeNode, semanticsTreeNode } from "../../macros/macros.ts";
 
 export const doc:parser = (str)=>{
     const lexer = new Lexer({gfm:true});
@@ -24,7 +24,7 @@ export const doc:parser = (str)=>{
  * @returns 
  * @todo handle escape character
  */
-function convertToTreeNode(obj:marked.Token,parent:generalTreeNode){
+function convertToTreeNode(obj:marked.Token,parent:semanticsTreeNode){
     const node:treeNode = new treeNode(obj.type)
     node.raw = obj.raw
     if(obj.type == "heading"){

@@ -1,5 +1,5 @@
 import type {
-    generalTreeNode,
+    semanticsTreeNode,
     parser,
     parserevent,
     rootTreeNode,
@@ -156,12 +156,12 @@ const dataMappers = new Processors<passType>(
 type contextType = Record<string, any>;
 type renderPassType = (
     tree: Node,
-    output: generalTreeNode,
+    output: semanticsTreeNode,
     context: Readonly<contextType>,
-) => [generalTreeNode, contextType | undefined, parserevent] | [
-    generalTreeNode,
+) => [semanticsTreeNode, contextType | undefined, parserevent] | [
+    semanticsTreeNode,
     contextType,
-] | [generalTreeNode];
+] | [semanticsTreeNode];
 
 const renderMappers = new Processors<renderPassType>(
     {
@@ -313,10 +313,10 @@ const renderMappers = new Processors<renderPassType>(
  */
 function mapNode(
     iptTree: Node,
-    resTree: generalTreeNode,
+    resTree: semanticsTreeNode,
     contextStack: Array<contextType>,
     eventlist: parserevent[],
-): [generalTreeNode, contextType] {
+): [semanticsTreeNode, contextType] {
     //console.group(iptTree.parentNode?.nodeName)
     //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
     const passSelected = renderMappers.getProcessor(iptTree.nodeName);

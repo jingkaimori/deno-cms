@@ -26,7 +26,7 @@ export function getparser(parserfunc: parserfunc): parser {
     };
 }
 
-export class treeNode<T extends nodeType.general = nodeType.general> {
+export class treeNode<T extends nodeType.arbitary = nodeType.semantics> {
     name: T["type"];
     raw: string;
     #childs: treeNode[];
@@ -108,7 +108,7 @@ export class treeNode<T extends nodeType.general = nodeType.general> {
     }
 }
 
-export function value<T>(variable: parservar<T>, context: treeNode<nodeType.general>): T {
+export function value<T>(variable: parservar<T>, context: treeNode<nodeType.semantics>): T {
     if (variable instanceof Function) {
         return variable(context);
     } else {

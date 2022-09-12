@@ -1,5 +1,5 @@
 import {
-    generalTreeNode,
+    semanticsTreeNode,
     parsercontextlabel,
     parserevent,
     parserfunc,
@@ -116,7 +116,7 @@ export function modifycontext(
     modifier: (
         str: string,
         laststr: string,
-        context: generalTreeNode,
+        context: semanticsTreeNode,
     ) => void,
 ): parserfunc {
     return (str: string, context, stack, event) => {
