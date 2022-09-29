@@ -1,0 +1,102 @@
+[
+    {
+        "name": "sactionmacro",
+        "type": "macro",
+        "typedef": {
+            "childs": [
+                "text",
+                {
+                    "name": "typemodify-variety",
+                    "arg": "paragraph"
+                }
+            ],
+            "style": {
+                "name": "typemodify-intersection",
+                "args": [
+                    "text-like",
+                    {
+                        "name": "typemodify-optional",
+                        "arg": {
+                            "name": "numbered",
+                            "style": {
+                                "numbered": "boolean"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "define": {
+            "name": "block",
+            "raw": "",
+            "childs": [
+                {
+                    "name": "optional",
+                    "raw": "",
+                    "childs": [
+                        {
+                            "name": "text",
+                            "raw": {
+                                "valuefrom": "function",
+                                "function": "getChapterNum"
+                            },
+                            "childs": [],
+                            "auxiliary": {
+                                "font-size": {
+                                    "valuefrom": "style",
+                                    "stylename": "font-size"
+                                }
+                            }
+                        }
+                    ],
+                    "auxiliary": {
+                        "condition": {
+                            "valuefrom": "style",
+                            "stylename": "numbered"
+                        }
+                    }
+                },
+                {
+                    "name": "applystyle",
+                    "raw": "",
+                    "childs": [
+                        {
+                            "name": "argument",
+                            "raw": "",
+                            "childs": [],
+                            "auxiliary": {
+                                "position": 1
+                            }
+                        },
+                        
+                    ],
+                    "auxiliary": {
+                        "font-size": {
+                            "valuefrom": "style",
+                            "stylename": "font-size"
+                        }
+                    }
+                },
+                {
+                    "name": "argument",
+                    "raw": "",
+                    "childs": [],
+                    "auxiliary": {
+                        "begin-pos": 2
+                    }
+                },
+            ],
+            "auxiliary": {
+                "title-level": 1,
+                "semantic-role": "title"
+            }
+        }
+    },
+    {
+        "name": "text-like",
+        "type": "style",
+        "style": {
+            "font-size": "number"
+        }
+    }
+]
