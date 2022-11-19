@@ -173,7 +173,7 @@ export const followeditem: parserfunc = symbol(
         symbol(
             multiple(
                 delimpattern,
-                (_,context) => (Number(context?.listdepth) - 1)
+                (_,context) => (Number(context?.listdepth) - 1),(_,context) => (Number(context?.listdepth) + 1)
             ),"__delim"
         ),
         inline,
@@ -201,21 +201,21 @@ export const firstitem:parserfunc = symbol(
 
 export const sublist: parserfunc = 
 symbol(
+    scope(
     seq(
         firstitem,
         multiple(
             or(followeditem, getparserfunc(()=>(sublist))))
+    ),()=>{}
     ),"__list"
 )
 
-export const list: parserfunc = symbol(
-    scope(
-        sublist,
-        (context)=>{
-            context.listdepth = 0
-        }
-    )
-,"__list");
+export const list: parserfunc = scope(
+    sublist,
+    (context)=>{
+        context.listdepth = 0
+    }
+);
 
 const br = symbol(match(/[\n\r]/), "br");
 
