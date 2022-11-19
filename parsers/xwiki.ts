@@ -13,6 +13,7 @@ import {
     parserfunc,
     seq,
     symbol,
+    scope,
 } from "../macros/macros.ts";
 
 const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
@@ -30,7 +31,7 @@ export const titletext: parserfunc = symbol(
 export const title: parserfunc = symbol(
     seq(
         eq("="),
-        or(getparserfunc("title"), titletext),
+        or(getparserfunc(()=>(title)), titletext),
         eq("="),
     ),
     "title",
@@ -165,57 +166,56 @@ export const inline: parserfunc = multiple(
     ),
     1,
 );
+const delimpattern = match(/(\*\.|\*|1\.|1|;|:)/);
 
-export const followedlist: parserfunc = symbol(
-    seq(
-        match(/[\n\r]/),
-        (s, context, stack, e) => {
-            const namenode = context?.parent?.childs.at(0)?.childByName(
-                "__delim",
-            );
-            const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)?.length;
-            let lthval = depth ?? 1;
-            let newlth = lthval + 1;
-            return symbol(
-                multiple(match(/(\*\.|\*|1\.|1|;|:)/), lthval, newlth),
-                "__delim",
-            )(s, context, stack, e);
-        },
-        inline,
-    ),
-    "__listitemnew",
-);
-
-export const listitemnew: parserfunc = symbol(
+export const followeditem: parserfunc = symbol(
     seq(
         symbol(
-            multiple(match(/(\*\.|\*|1\.|1|;|:)/), (context) => {
-                const namenode = context?.parent?.parent?.parent
-                    ?.childs.at(0)?.childByName("__delim");
-                const depth = namenode?.raw?.match(/(\*\.|\*|1\.|1|;|:)/g)
-                    ?.length;
-                return (depth ?? 0) + 1;
-            }),
-            "__delim",
+            multiple(
+                delimpattern,
+                (_,context) => (Number(context?.listdepth) - 1)
+            ),"__delim"
         ),
         inline,
+        match(/[\n\r]/),
     ),
-    "__listitemnew",
-);
+    "__listitemnew"
+)
 
-const cascadedlist = multiple(
-    seq(match(/[\n\r]/), getparserfunc("__list")),
-    0,
-    2,
-);
-export const list: parserfunc = symbol(
+export const firstitem:parserfunc = symbol(
     seq(
-        listitemnew,
-        cascadedlist,
-        multiple(seq(followedlist, cascadedlist)),
+        symbol(
+            multiple(
+                delimpattern,
+                (_,context) => (Number(context?.listdepth) ),undefined,
+                (context,times)=>{
+                    context.listdepth = times
+                }
+            ),"__delim"
+        ),
+        inline,
+        match(/[\n\r]/),
     ),
-    "__list",
-);
+    "__listitemnew"
+)
+
+export const sublist: parserfunc = 
+symbol(
+    seq(
+        firstitem,
+        multiple(
+            or(followeditem, getparserfunc(()=>(sublist))))
+    ),"__list"
+)
+
+export const list: parserfunc = symbol(
+    scope(
+        sublist,
+        (context)=>{
+            context.listdepth = 0
+        }
+    )
+,"__list");
 
 const br = symbol(match(/[\n\r]/), "br");
 

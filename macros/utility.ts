@@ -1,5 +1,5 @@
 import { plainDocument } from "../types/data.ts";
-import type { parser, parsercontextlabel, parserevent, parserfunc, parservar, nodeType, rootTreeNode } from "./types.ts";
+import type { parser, parserContextLabel, parserEvent, parserfunc, parservar, nodeType, rootTreeNode, contextValue } from "./types.ts";
 
 /**
  * 
@@ -13,9 +13,9 @@ export const errormessage = {
 export function getparser(parserfunc: parserfunc): parser {
     return (str: string) => {
         const tree: rootTreeNode = new treeNode<nodeType.root>("root")
-        const stack: parsercontextlabel[] = [];
-        const events: parserevent[] = [];
-        const [success, leftstr] = parserfunc(str, tree, stack,events);
+        const stack: parserContextLabel[] = [];
+        const events: parserEvent[] = [];
+        const [success, leftstr] = parserfunc(str, tree, {}, stack,events);
         return {
             tree,
             stack,
@@ -108,16 +108,29 @@ export class treeNode<T extends nodeType.arbitary = nodeType.semantics> {
     }
 }
 
-export function value<T>(variable: parservar<T>, context: treeNode<nodeType.semantics>): T {
+export function value<T>(variable: parservar<T>, subtree: treeNode<nodeType.semantics>, context:contextValue): T {
     if (variable instanceof Function) {
-        return variable(context);
+        return variable(subtree, context);
     } else {
         return variable;
     }
 }
 
+export function cloneContext(contest: contextValue):contextValue{
+    const res = Object.assign({},contest)
+    for (const key in res) {
+        if (
+            Object.prototype.hasOwnProperty.call(res, key) &&
+            typeof res[key] == "object"
+        ) {
+            res[key] = cloneContext(res[key] as contextValue)
+        }
+    }
+    return res
+}
+
 export class ParserError extends Error {
-    constructor(msg: string, stack: parsercontextlabel[]) {
+    constructor(msg: string, stack: parserContextLabel[]) {
         console.error(stack);
         super(msg);
     }

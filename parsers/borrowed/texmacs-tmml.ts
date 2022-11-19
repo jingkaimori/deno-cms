@@ -1,7 +1,7 @@
 import type {
     semanticsTreeNode,
     parser,
-    parserevent,
+    parserEvent,
     rootTreeNode,
 } from "../../macros/macros.ts";
 import { treeNode } from "../../macros/macros.ts";
@@ -11,7 +11,7 @@ export const doc: parser = (str) => {
     const parser = new DOMParser();
     const tree = parser.parseFromString(str, "text/xml");
     removeBlankText(tree);
-    const events: parserevent[] = [];
+    const events: parserEvent[] = [];
     const [displayTree] = mapNode(
         tree.cloneNode(true),
         new treeNode("root"),
@@ -56,7 +56,7 @@ function removeBlankText(tree: Node): void {
     removedChilds.every(tree.removeChild, tree);
 }
 
-const scanMetaInfo = <T>(tree: Node, context: T): T => {
+const scanMetaInfo = <T extends Record<string,any> >(tree: Node, context: T): T => {
     // console.group()
     const passSelected = dataMappers.getProcessor(tree.nodeName);
     let nextContext: T | T[keyof T] = context;
@@ -158,7 +158,7 @@ type renderPassType = (
     tree: Node,
     output: semanticsTreeNode,
     context: Readonly<contextType>,
-) => [semanticsTreeNode, contextType | undefined, parserevent] | [
+) => [semanticsTreeNode, contextType | undefined, parserEvent] | [
     semanticsTreeNode,
     contextType,
 ] | [semanticsTreeNode];
@@ -315,7 +315,7 @@ function mapNode(
     iptTree: Node,
     resTree: semanticsTreeNode,
     contextStack: Array<contextType>,
-    eventlist: parserevent[],
+    eventlist: parserEvent[],
 ): [semanticsTreeNode, contextType] {
     //console.group(iptTree.parentNode?.nodeName)
     //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
@@ -326,7 +326,7 @@ function mapNode(
         },
         {},
     );
-    let newScope = undefined, parserev: parserevent | undefined;
+    let newScope = undefined, parserev: parserEvent | undefined;
     [resTree, newScope, parserev] = passSelected(iptTree, resTree, context);
     if (newScope !== undefined) {
         contextStack.push(newScope);
