@@ -44,21 +44,19 @@ Deno.test({
             leftstr: "",
         });
         assertObjectMatch(res.tree.toPlainObject(), {
-            childs: {
-                "0": {
+            childs: [{
                     name: "link",
-                    childs: {
-                        "0": {
+                    childs: [{
                             name: "__label",
                             raw: "title ",
                         },
-                        "1": {
+                        {
                             name: "__path",
                             raw: " url",
                         },
-                    },
+                    ],
                 },
-            },
+            ],
         });
     },
 });
@@ -79,7 +77,7 @@ Deno.test({
             ),
             {
                 success: true,
-                leftstr: "\n",
+                leftstr: "",
             },
         );
     },
@@ -96,30 +94,28 @@ Deno.test({
             res,
             {
                 success: true,
-                leftstr: "\n",
+                leftstr: "",
             },
         );
+        console.log(res.tree.toString())
         assertObjectMatch(
             res.tree.toPlainObject(),
             {
-                childs:{
-                    "0":{
+                childs:[{
                         name:"olist",
-                        childs:{
-                            "0":{
+                        childs:[{
                                 name:"item",
-                                childs:{
-                                    "0":{
+                                childs:[{
                                         name:"text"
                                     }
-                                }
+                                ]
                             },
-                            "1":{
+                            {
                                 name:"olist"
                             }
-                        }
+                        ]
                     }
-                }
+                ]
             }
         )
     },
@@ -140,13 +136,11 @@ Deno.test({
         assertObjectMatch(
             res.tree.toPlainObject(),
             {
-                childs:{
-                    "0":{
+                childs:[{
                         name:"template",
-                        childs:{
-                        }
+                        childs:[]
                     }
-                }
+                ]
             }
         )
         console.log(res.tree.toString());

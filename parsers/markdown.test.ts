@@ -2,6 +2,7 @@ import { assertObjectMatch } from "../deps.ts";
 import { match, seq, treeNode, parser } from "../macros/macros.ts";
 import * as local from "./markdown.ts";
 import * as borrow from "./borrowed/markdown.ts"
+import { assert } from "https://deno.land/std@0.160.0/_util/assert.ts";
 
 Deno.test({
     name: "title() test",
@@ -39,22 +40,26 @@ paragraph 1\n\
 \n\
 paragraph 2 long Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum \n\
 ")
-    console.log(res.tree)
     assertObjectMatch(res,{
-        success:true,
-        tree:{
-            childs:{
-                "0":{
-                    name:"title",
-                    raw:"Title"
-                },
-                "1":{
-                    name:"paragraph"
-                },
-                "2":{
-                    name:"paragraph"
-                }
-            }
-        }
+        success:true
     });
+    assertObjectMatch(res.tree.toPlainObject(),{
+        childs:[
+            {
+                name:"title",
+                childs:[
+                    {
+                        name:"text",
+                        raw:"Title"
+                    }
+                ]
+            },
+            {
+                name:"paragraph"
+            },
+            {
+                name:"paragraph"
+            }
+        ]
+    })
 }

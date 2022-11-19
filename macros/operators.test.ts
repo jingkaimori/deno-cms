@@ -1,4 +1,4 @@
-import { assertThrows,assertObjectMatch } from "../deps.ts";
+import { assertThrows, assertObjectMatch } from "../deps.ts";
 import { getparserfunc, multiple, not, or, seq, symbol } from "./operators.ts";
 import { empty, eq } from "./primitives.ts";
 import { getparser } from "./utility.ts"
@@ -10,15 +10,15 @@ Deno.test({
     const infinitemultiple = getparser(multiple(eq("=")))
     assertObjectMatch(
       infinitemultiple(""),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
     assertObjectMatch(
       infinitemultiple("====="),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
     assertObjectMatch(
       infinitemultiple("=====+"),
-      {success:true,leftstr:"+"},
+      { success: true, leftstr: "+" },
     );
   },
 });
@@ -30,35 +30,35 @@ Deno.test({
       getparser(multiple(eq("="), 1))(
         "+=====+"
       ),
-      {success:false,leftstr:"+=====+"},
+      { success: false, leftstr: "+=====+" },
     );
     assertObjectMatch(
       getparser(multiple(eq("="), 6))("====="),
-      {success:false,leftstr:"====="},
+      { success: false, leftstr: "=====" },
     );
     assertObjectMatch(
       getparser(multiple(eq("="), 0, 4))(
         "====="
       ),
-      {success:false,leftstr:"====="},
+      { success: false, leftstr: "=====" },
     );
     assertObjectMatch(
       getparser(multiple(eq("="), 0, 5))(
         "====="
       ),
-      {success:false,leftstr:"====="},
+      { success: false, leftstr: "=====" },
     );
     assertObjectMatch(
       getparser(multiple(eq("="), 0, 6))(
         "====="
       ),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
     assertObjectMatch(
       getparser(multiple(eq("="), 1, 1))(
         "="
       ),
-      {success:false,leftstr:"="},
+      { success: false, leftstr: "=" },
     );
   },
 });
@@ -66,12 +66,12 @@ Deno.test({
 Deno.test({
   name: "multiple() security test",
   fn(): void {
-    assertThrows(()=>getparser(multiple(empty))(
+    assertThrows(() => getparser(multiple(empty))(
       "",
-    ),Error,"empty match")
-    assertThrows(()=>getparser(seq(multiple(empty)))(
+    ), Error, "empty match")
+    assertThrows(() => getparser(seq(multiple(empty)))(
       "",
-    ),Error,"empty match")
+    ), Error, "empty match")
   },
 });
 
@@ -84,45 +84,45 @@ Deno.test({
       equfront(
         "|"
       ),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
     assertObjectMatch(
       splitfront(
         "|"
       ),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
 
     assertObjectMatch(
       equfront(
         "+"
       ),
-      {success:false,leftstr:"+"},
+      { success: false, leftstr: "+" },
     );
     assertObjectMatch(
       splitfront(
         "+"
       ),
-      {success:false,leftstr:"+"},
+      { success: false, leftstr: "+" },
     );
 
     assertObjectMatch(
       equfront(
         "|=|||"
       ),
-      {success:true,leftstr:"=|||"},
+      { success: true, leftstr: "=|||" },
     );
     assertObjectMatch(
       splitfront(
         "|=|||"
       ),
-      {success:true,leftstr:"=|||"},
+      { success: true, leftstr: "=|||" },
     );
     assertObjectMatch(
       getparser(or(eq("||||"), eq("=||")))(
         "|||"
       ),
-      {success:false,leftstr:"|||"},
+      { success: false, leftstr: "|||" },
     );
   },
 });
@@ -134,38 +134,38 @@ Deno.test({
       getparser(not(eq("=")))(
         "|"
       ),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
     assertObjectMatch(
       getparser(not(eq("|")))(
         "|"
       ),
-      {success:false,leftstr:"|"},
+      { success: false, leftstr: "|" },
     );
     assertObjectMatch(
       getparser(not(eq("|")))(
         ""
       ),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
 
     assertObjectMatch(
       getparser(not(or(eq("="), eq("|"))))(
         "+"
       ),
-      {success:true,leftstr:""},
+      { success: true, leftstr: "" },
     );
     assertObjectMatch(
       getparser(not(or(eq("|"), eq("="))))(
         "|"
       ),
-      {success:false,leftstr:"|"},
+      { success: false, leftstr: "|" },
     );
     assertObjectMatch(
       getparser(not(eq("||||")))(
         "|||"
       ),
-      {success:true,leftstr:"||"},
+      { success: true, leftstr: "||" },
     );
   },
 });
@@ -179,22 +179,22 @@ Deno.test({
       eq("="),
     ));
     assertObjectMatch(parser("=a="), {
-      success:true,
-      leftstr:""
+      success: true,
+      leftstr: ""
     });
     assertObjectMatch(parser("=aba="), {
-      success:false,
-      leftstr:"=aba=",
+      success: false,
+      leftstr: "=aba=",
     });
-    assertObjectMatch(parser("=="),  {success:true,leftstr:""});
-    assertObjectMatch(parser("==="), {success:true,leftstr:"="});
-    assertObjectMatch(parser("=a==a="),{success:true,leftstr:"=a="});
+    assertObjectMatch(parser("=="), { success: true, leftstr: "" });
+    assertObjectMatch(parser("==="), { success: true, leftstr: "=" });
+    assertObjectMatch(parser("=a==a="), { success: true, leftstr: "=a=" });
 
     assertObjectMatch(getparser(seq(
       multiple(eq("a")),
-    ))("aa="),{
-      success:true,
-      leftstr:"="
+    ))("aa="), {
+      success: true,
+      leftstr: "="
     })
   },
 });
@@ -209,16 +209,16 @@ Deno.test({
     ));
     const res = parser("=abcd=")
     assertObjectMatch(res, {
-      success:true,
-      leftstr:""})
+      success: true,
+      leftstr: ""
+    })
     assertObjectMatch(res.tree.toPlainObject(),
       {
-        childs:{
-          "0":{
-            raw:"abcd",
-            name:"title"
-          }
-        }
+        childs: [
+          {
+            raw: "abcd",
+            name: "title"
+          }]
       }
     );
   },
@@ -234,48 +234,47 @@ Deno.test({
     ));
     const res = parserfunction("=abcd=")
     assertObjectMatch(res, {
-      success:true,
-      leftstr:""})
+      success: true,
+      leftstr: ""
+    })
     assertObjectMatch(res.tree.toPlainObject(), {
-        childs:{
-          "0":{
-            raw:"abcd",
-            name:"title"
-          }
-        }
-      } );
+      childs: [{
+        raw: "abcd",
+        name: "title"
+      }]
+    });
   },
 });
 
 Deno.test({
   name: "guard() test",
   fn(): void {
-    const title = getparser(symbol(seq(
-        or(getparserfunc("title"), eq("a")),
-        eq("="),
-      ), "title"));
-    assertThrows(()=>title(
+    const title = symbol(seq(
+      or(getparserfunc(() => (title)), eq("a")),
+      eq("="),
+    ), "title");
+    const titlep = getparser(title);
+    assertThrows(() => titlep(
       "a==",
-    ),Error,"empty match")
+    ), Error, "empty match")
   },
 });
 
 Deno.test({
   name: "getparserfunc() test",
   fn(): void {
-    const title = getparser(symbol(seq(
-        eq("="),
-        or(getparserfunc("title"), eq("a")),
-        eq("="),
-      ), "title"));
-    assertObjectMatch(title(
+    const title = symbol(seq(
+      eq("="),
+      or(getparserfunc(() => (title)), eq("a")),
+      eq("="),
+    ), "title");
+    const titlep = getparser(title);
+    assertObjectMatch(titlep(
       "==a==",
-    ),{
-      success:true,
-      leftstr:"",
-      stack:{
-        length:0
-      },
+    ), {
+      success: true,
+      leftstr: "",
+      stack: [],
     })
   },
 });
