@@ -11,7 +11,7 @@ export type parserList = {[key: string]:parserfunc}
  */
 export type parserfunc = (this:void, str: string, subtree: treeNode<nodeType.detached>, context:contextValue, stack: parserContextLabel[], events:parserEvent[]) => result;
 export type parser = (str:string)=>{tree:treeNode<nodeType.root>,stack:parserContextLabel[],success:boolean,leftstr:string, events:parserEvent[]}
-export type parservar<T> = T|((subtree:Readonly<treeNode<nodeType.semantics>>,context:contextValue)=>T)
+export type parservar<T> = T|((subtree:Readonly<treeNode<nodeType.semantics>>, context:Readonly<contextValue>)=>T)
 
 export * as nodeType from  "./nodetype.ts";
 export type rootTreeNode = treeNode<nodeType.root>
