@@ -70,11 +70,12 @@ export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
 
 /**Determine if given pattern appears repeatly. If min and max be set, then 
  * times in which pattern appears must less than max and greater then main. 
- * Min and max time is not included.
  * 
  * @param func 
- * @param min 
- * @param max 
+ * @param min minium times. if pattern appears in this time, then will pass 
+ * the parser
+ * @param max minium times. if pattern appears in this time, then will not 
+ * pass the parser
  * @param actual 
  * @returns 
  */

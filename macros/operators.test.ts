@@ -33,6 +33,18 @@ Deno.test({
       { success: false, leftstr: "+=====+" },
     );
     assertObjectMatch(
+      getparser(multiple(eq("="), 0))(
+        "+=====+"
+      ),
+      { success: true, leftstr: "+=====+" },
+    );
+    assertObjectMatch(
+      getparser(multiple(eq("=")))(
+        "=====+"
+      ),
+      { success: true, leftstr: "+" },
+    );
+    assertObjectMatch(
       getparser(multiple(eq("="), 6))("====="),
       { success: false, leftstr: "=====" },
     );
