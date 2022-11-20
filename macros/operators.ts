@@ -4,6 +4,7 @@ import {
     parserfunc,
     parservar,
     contextValue,
+    emptyContext,
 } from "./types.ts";
 import { cloneContext, errormessage, treeNode, value } from "./utility.ts";
 import { consumedstr } from "./internalutility.ts";
@@ -20,11 +21,11 @@ const safemode = true;
  * @param func
  * @param type display label for this guard def
  */
-export function guard(
-    func: parserfunc,
+export function guard<T extends contextValue = emptyContext>(
+    func: parserfunc<T>,
     type: string,
-): parserfunc {
-    const guardfunc: parserfunc = (str, subtree, context, stack, event) => {
+): parserfunc<T> {
+    const guardfunc: parserfunc<T> = (str, subtree, context, stack, event) => {
         if (safemode) {
             const labelres = stack.find((v) => v.func == guardfunc);
             if (labelres !== undefined) {
@@ -34,7 +35,7 @@ export function guard(
             }
             stack.push({
                 type: type,
-                func: guardfunc,
+                func: guardfunc as parserfunc<contextValue>,
                 strremain: str,
                 context,
             });
@@ -54,8 +55,8 @@ export function guard(
  * @param name 
  * @returns 
  */
-export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
-    const __symbol: parserfunc = (str, subtree, context, stack, event) => {
+export function symbol<T extends contextValue = emptyContext>(func: parserfunc<T>, name: parservar<string, T>): parserfunc<T> {
+    const __symbol: parserfunc<T> = (str, subtree, context, stack, event) => {
         const namevalue = value(name, subtree, context);
         const childsymbol = new treeNode<detached>(namevalue);
         const [receive, laststr] = func(str, childsymbol, context, stack, event);
@@ -65,7 +66,7 @@ export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
         }
         return [receive, laststr];
     };
-    return guard(__symbol, "symbol");
+    return guard<T>(__symbol, "symbol");
 }
 
 /**Determine if given pattern appears repeatly. If min and max be set, then 
@@ -79,13 +80,13 @@ export function symbol(func: parserfunc, name: parservar<string>): parserfunc {
  * @param actual 
  * @returns 
  */
-export function multiple(
-    func: parserfunc,
-    min?: parservar<number>,
-    max?: parservar<number>,
-    actual?: (context:contextValue,times:number)=>void
-): parserfunc {
-    return guard((originstr, subtree, context, stack, event) => {
+export function multiple<T extends contextValue = emptyContext>(
+    func: parserfunc<T>,
+    min?: parservar<number,T>,
+    max?: parservar<number,T>,
+    actual?: (context:T,times:number)=>void
+): parserfunc<T> {
+    return guard<T>((originstr, subtree, context, stack, event) => {
         let times = -1;
         let receive = true, loopstr = originstr;
         do {
@@ -109,7 +110,7 @@ export function multiple(
     }, "multiple");
 }
 
-export function not(func: parserfunc): parserfunc {
+export function not<T extends contextValue = emptyContext>(func: parserfunc<T>): parserfunc<T> {
     return guard((str, subtree, context, stack, event) => {
         const [receive] = func(str, subtree.clone(), context, stack, event);
         if (receive) {
@@ -120,16 +121,16 @@ export function not(func: parserfunc): parserfunc {
     }, "not");
 }
 
-export function scope(
-    func:parserfunc,
+export function scope< newType extends contextValue,oldType extends contextValue = emptyContext>(
+    func:parserfunc<newType>,
     initializer: (
-        context:contextValue
-    ) => void
-):parserfunc{
+        context:oldType
+    ) => newType
+):parserfunc<oldType>{
     return (str: string, subtree, context, stack, event) => {
-        const newcontest = cloneContext(context);
-        initializer(newcontest)
-        return func(str, subtree, newcontest, stack, event)
+        const oldcopy = cloneContext(context);
+        const newcontext = initializer(oldcopy)
+        return func(str, subtree, newcontext, stack, event)
     };
 }
 
@@ -138,14 +139,14 @@ export function scope(
  * @param modifier
  * @returns
  */
-export function modifycontext(
-    func: parserfunc,
+export function modifycontext<T extends contextValue = emptyContext>(
+    func: parserfunc<T>,
     modifier: (
         context: contextValue,
         str: string,
         laststr: string,
     ) => void,
-): parserfunc {
+): parserfunc<T> {
     return (str: string, subtree, context, stack, event) => {
         const [receive, laststr] = func(str, subtree, context, stack, event);
         if (receive) {
@@ -155,7 +156,7 @@ export function modifycontext(
     };
 }
 
-export function or(...functions: parserfunc[]): parserfunc {
+export function or<T extends contextValue = emptyContext>(...functions: parserfunc<T>[]): parserfunc<T> {
     return guard((str, subtree, context, stack, event) => {
         warnSubparserNums(event, stack, "or", ...functions);
         for (const func of functions) {
@@ -168,7 +169,7 @@ export function or(...functions: parserfunc[]): parserfunc {
     }, "or");
 }
 
-export function seq(...functions: parserfunc[]): parserfunc {
+export function seq<T extends contextValue = emptyContext>(...functions: parserfunc<T>[]): parserfunc<T> {
     return guard((str, subtree, context, stack, event) => {
         warnSubparserNums(event, stack, "seq", ...functions);
         let receive = true, newstr = str;
@@ -188,7 +189,7 @@ export function seq(...functions: parserfunc[]): parserfunc {
  * @param delayedfunc
  * @returns 
  */
-export function getparserfunc( delayedfunc:()=> parserfunc ): parserfunc {
+export function getparserfunc<T extends contextValue = emptyContext>( delayedfunc:()=> parserfunc<T> ): parserfunc<T> {
     return (str,subtree,context, stack, event)=>{
         
         const labelres = delayedfunc()
@@ -200,11 +201,11 @@ export function getparserfunc( delayedfunc:()=> parserfunc ): parserfunc {
     }
 }
 
-function warnSubparserNums(
+function warnSubparserNums<T extends contextValue>(
     events: parserEvent[],
     stack: parserContextLabel[],
     label: string,
-    ...functions: parserfunc[]
+    ...functions: parserfunc<T>[]
 ): void {
     if (functions.length < 2) {
         const event: parserEvent = {

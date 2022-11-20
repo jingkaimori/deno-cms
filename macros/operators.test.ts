@@ -1,6 +1,7 @@
 import { assertThrows, assertObjectMatch } from "../deps.ts";
 import { getparserfunc, multiple, not, or, seq, symbol } from "./operators.ts";
 import { empty, eq } from "./primitives.ts";
+import { parserfunc } from "./types.ts";
 import { getparser } from "./utility.ts"
 
 
@@ -261,7 +262,7 @@ Deno.test({
 Deno.test({
   name: "guard() test",
   fn(): void {
-    const title = symbol(seq(
+    const title:parserfunc = symbol(seq(
       or(getparserfunc(() => (title)), eq("a")),
       eq("="),
     ), "title");
@@ -275,7 +276,7 @@ Deno.test({
 Deno.test({
   name: "getparserfunc() test",
   fn(): void {
-    const title = symbol(seq(
+    const title:parserfunc = symbol(seq(
       eq("="),
       or(getparserfunc(() => (title)), eq("a")),
       eq("="),

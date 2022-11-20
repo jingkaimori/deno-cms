@@ -108,7 +108,9 @@ export class treeNode<T extends nodeType.arbitary = nodeType.semantics> {
     }
 }
 
-export function value<T>(variable: parservar<T>, subtree: treeNode<nodeType.semantics>, context:contextValue): T {
+export function value<T, U extends contextValue =contextValue>(
+    variable: parservar<T,U>, subtree: treeNode<nodeType.semantics>, context:U
+): T {
     if (variable instanceof Function) {
         return variable(subtree, context);
     } else {
@@ -116,14 +118,15 @@ export function value<T>(variable: parservar<T>, subtree: treeNode<nodeType.sema
     }
 }
 
-export function cloneContext(contest: contextValue):contextValue{
-    const res = Object.assign({},contest)
+export function cloneContext<T extends contextValue>(contest: T):T{
+    const res:T = Object.assign({},contest)
     for (const key in res) {
         if (
             Object.prototype.hasOwnProperty.call(res, key) &&
             typeof res[key] == "object"
         ) {
-            res[key] = cloneContext(res[key] as contextValue)
+            // deno-lint-ignore no-explicit-any
+            res[key] = cloneContext(res[key] as any)
         }
     }
     return res

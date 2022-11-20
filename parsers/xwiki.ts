@@ -175,14 +175,19 @@ export const inline: parserfunc = multiple(
     ),
     1,
 );
+
+type listContext={
+    listdepth:number
+}
 const delimpattern = match(/(\*\.|\*|1\.|1|;|:)/);
 
-export const followeditem: parserfunc = symbol(
+export const followeditem: parserfunc<listContext> = symbol(
     seq(
         symbol(
-            multiple(
+            multiple<listContext>(
                 delimpattern,
-                (_,context) => (Number(context?.listdepth) ),(_,context) => (Number(context?.listdepth) + 1)
+                (_,context) => (context.listdepth ),
+                (_,context) => (context.listdepth + 1)
             ),"__delim"
         ),
         inline,
@@ -191,12 +196,12 @@ export const followeditem: parserfunc = symbol(
     "__listitemnew"
 )
 
-export const firstitem:parserfunc = symbol(
+export const firstitem:parserfunc<listContext> = symbol(
     seq(
         symbol(
-            multiple(
+            multiple<listContext>(
                 delimpattern,
-                (_,context) => (Number(context?.listdepth) +1),undefined,
+                (_,context) => (context.listdepth +1),undefined,
                 (context,times)=>{
                     context.listdepth = times
                 }
@@ -208,21 +213,23 @@ export const firstitem:parserfunc = symbol(
     "__listitemnew"
 )
 
-export const sublist: parserfunc = 
+export const sublist: parserfunc<listContext> = 
 symbol(
-    scope(
+    scope<listContext,listContext>(
     seq(
         firstitem,
         multiple(
             or(followeditem, getparserfunc(()=>(sublist))))
-    ),()=>{}
+    ),(context)=>context
     ),"__list"
 )
 
-export const list: parserfunc = scope(
+export const list: parserfunc = scope<listContext>(
     sublist,
     (context)=>{
-        context.listdepth = 0
+        const newcontext = context as listContext
+        newcontext.listdepth = 0
+        return newcontext
     }
 );
 
