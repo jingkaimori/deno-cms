@@ -51,18 +51,27 @@ export const hyperlink: parserfunc = symbol(
     seq(
         eq("[["),
         label,
-        multiple(
-            seq(
-                eq(">>"),
-                path,
-            ),
-            0,
-            2,
+        seq(
+            eq(">>"),
+            path,
         ),
         eq("]]"),
     ),
     "link",
 );
+
+export const urllink: parserfunc = symbol(
+    seq(
+        eq("[["),
+        path,
+        eq("]]"),
+    ),
+    "link",
+);
+
+export const link: parserfunc = or(
+    hyperlink,urllink
+)
 
 export const plainchar: parserfunc = match(/[^\n\r\[]/);
 
@@ -149,7 +158,7 @@ const macroinline: parserfunc = symbol(
 
 export const plain: parserfunc = symbol(
     multiple(
-        not(or(hyperlink, escape, escapechar, macrobegin, linebreak, empty)),
+        not(or(link, escape, escapechar, macrobegin, linebreak, empty)),
         1,
     ),
     "text",
@@ -157,7 +166,7 @@ export const plain: parserfunc = symbol(
 
 export const inline: parserfunc = multiple(
     or(
-        hyperlink,
+        link,
         macroinline,
         macrowithoutbody,
         escape,
@@ -173,7 +182,7 @@ export const followeditem: parserfunc = symbol(
         symbol(
             multiple(
                 delimpattern,
-                (_,context) => (Number(context?.listdepth) - 1),(_,context) => (Number(context?.listdepth) + 1)
+                (_,context) => (Number(context?.listdepth) ),(_,context) => (Number(context?.listdepth) + 1)
             ),"__delim"
         ),
         inline,
@@ -187,7 +196,7 @@ export const firstitem:parserfunc = symbol(
         symbol(
             multiple(
                 delimpattern,
-                (_,context) => (Number(context?.listdepth) ),undefined,
+                (_,context) => (Number(context?.listdepth) +1),undefined,
                 (context,times)=>{
                     context.listdepth = times
                 }
@@ -221,7 +230,7 @@ const br = symbol(match(/[\n\r]/), "br");
 
 const tableinline: parserfunc = multiple(
     or(
-        hyperlink,
+        link,
         macroinline,
         macrowithoutbody,
         escape,
@@ -229,7 +238,7 @@ const tableinline: parserfunc = multiple(
         symbol(
             multiple(
                 not(or(
-                    hyperlink,
+                    link,
                     escape,
                     escapechar,
                     macrobegin,

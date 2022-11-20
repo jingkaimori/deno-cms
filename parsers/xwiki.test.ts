@@ -1,5 +1,5 @@
 import { assertObjectMatch, } from "../deps.ts";
-import { doc, hyperlink, title, titletext } from "./xwiki.ts";
+import { doc, link, title, titletext } from "./xwiki.ts";
 import { getparser } from "../macros/macros.ts";
 
 Deno.test({
@@ -36,26 +36,48 @@ Deno.test({
 });
 
 Deno.test({
-    name: "hyperlink() test",
+    name: "titled link() test",
     fn(): void {
-        const res = getparser(hyperlink)("[[title >> url]]");
+        const res = getparser(link)("[[title >> url]]");
         assertObjectMatch(res, {
             success: true,
             leftstr: "",
         });
         assertObjectMatch(res.tree.toPlainObject(), {
             childs: [{
-                    name: "link",
-                    childs: [{
-                            name: "__label",
-                            raw: "title ",
-                        },
-                        {
-                            name: "__path",
-                            raw: " url",
-                        },
-                    ],
+                name: "link",
+                childs: [{
+                    name: "__label",
+                    raw: "title ",
                 },
+                {
+                    name: "__path",
+                    raw: " url",
+                },
+                ],
+            },
+            ],
+        });
+    },
+});
+Deno.test({
+    name: "bare link() test",
+    fn(): void {
+        const res = getparser(link)("[[url]]");
+        assertObjectMatch(res, {
+            success: true,
+            leftstr: "",
+        });
+        assertObjectMatch(res.tree.toPlainObject(), {
+            childs: [{
+                name: "link",
+                childs: [
+                    {
+                        name: "__path",
+                        raw: "url",
+                    },
+                ],
+            },
             ],
         });
     },
@@ -66,7 +88,7 @@ Deno.test({
     fn(): void {
         assertObjectMatch(
             doc(
-"\
+                "\
 * c\n\
 * e\n\
 ** ca\n\
@@ -86,7 +108,7 @@ Deno.test({
     name: "ordered list() test",
     fn(): void {
         const res = doc(
-"\
+            "\
 1. 设置领地：\n\
 11. 先用一块木头斧子左键敲击一方块设置点A，\n",
         );
@@ -101,20 +123,20 @@ Deno.test({
         assertObjectMatch(
             res.tree.toPlainObject(),
             {
-                childs:[{
-                        name:"olist",
-                        childs:[{
-                                name:"item",
-                                childs:[{
-                                        name:"text"
-                                    }
-                                ]
-                            },
-                            {
-                                name:"olist"
-                            }
+                childs: [{
+                    name: "olist",
+                    childs: [{
+                        name: "item",
+                        childs: [{
+                            name: "text"
+                        }
                         ]
+                    },
+                    {
+                        name: "olist"
                     }
+                    ]
+                }
                 ]
             }
         )
@@ -136,9 +158,10 @@ Deno.test({
         assertObjectMatch(
             res.tree.toPlainObject(),
             {
-                childs:[{
-                        name:"template",
-                        childs:[]
+                childs: [
+                    {
+                        name: "template",
+                        childs: []
                     }
                 ]
             }
@@ -146,3 +169,57 @@ Deno.test({
         console.log(res.tree.toString());
     },
 });
+
+Deno.test({
+    name: "table() test",
+    fn(): void {
+        const res = doc(
+            `|=任务 |=期限
+|[[课程.工科数学分析.WebHome]]作业 |每周一
+|[[课程.大学物理.WebHome]]作业 |每周
+|[[imported.学术用途英语]]作业 |每周
+|[[课程.电路分析基础.WebHome]]作业 |每周
+|上线公共站 |本月内
+`,
+        );
+        assertObjectMatch(
+            res,
+            {
+                success: true,
+                leftstr: "",
+            },
+        );
+        console.log(res.tree.toPlainObject().childs)
+        assertObjectMatch(
+            res.tree.toPlainObject(),
+            {
+                childs: [
+                    {
+                        name: "table",
+                        childs: [
+                            {
+                                name: "trow",
+                                childs: [
+                                    {
+                                        name: "theadcell"
+                                    }
+                                ]
+                            },
+                            {
+                                name: "trow",
+                                childs: [
+                                    {
+                                        name: "tcell"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        )
+        console.log(res.tree.toString());
+    },
+});
+
+
