@@ -243,6 +243,7 @@ const tableinline: parserfunc = multiple(
     or(
         link,
         macroinline,
+        macroblock,
         macrowithoutbody,
         escape,
         escapechar,
@@ -252,7 +253,9 @@ const tableinline: parserfunc = multiple(
                     link,
                     escape,
                     escapechar,
-                    macrobegin,
+                    macroinline,
+                    macroblock,
+                    macrowithoutbody,
                     eq("|"),
                     linebreak,
                     empty,
@@ -309,10 +312,10 @@ const newline: parserfunc = or(
 );
 
 export const doc: parser = (str) => {
-    const res = getparser(particleinmiddle(
+    const res = getparser(multiple(or(
         newline,
         linebreak,
-    ))(str);
+    )))(str);
     postprocess(res.tree);
     return res;
 };
