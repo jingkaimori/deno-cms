@@ -1,5 +1,5 @@
 import { assertObjectMatch, } from "../deps.ts";
-import { doc, link, title, titletext } from "./xwiki.ts";
+import { doc, escape, link, title, titletext } from "./xwiki.ts";
 import { getparser } from "../macros/macros.ts";
 
 Deno.test({
@@ -169,6 +169,34 @@ Deno.test({
         console.log(res.tree.toString());
     },
 });
+
+
+Deno.test({
+    name: "escape() test",
+    fn(): void {
+        const parser = getparser(escape)
+        const res = parser("{{{/abc}}}\n")
+        assertObjectMatch(
+            res,
+            {
+                success: true,
+                leftstr: "\n"
+            }
+        )
+        assertObjectMatch(
+            res.tree.toPlainObject(),
+            {
+                childs: [
+                    {
+                        name: "rawtext",
+                        raw: "/abc",
+                        childs: []
+                    }
+                ]
+            }
+        )
+    }
+})
 
 Deno.test({
     name: "table() test",

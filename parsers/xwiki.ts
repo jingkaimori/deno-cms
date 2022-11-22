@@ -75,11 +75,15 @@ export const link: parserfunc = or(
 
 export const plainchar: parserfunc = match(/[^\n\r\[]/);
 
-const escapetext: parserfunc = symbol(multiple(neq("}}}")), "__plain");
-const escape: parserfunc = symbol(
-    seq(eq("{{{"), escapetext, eq("}}}")),
-    "rawtext",
+export const escape: parserfunc = seq(
+    eq("{{{"),
+    symbol(
+        multiple(neq("}}}")),
+        "rawtext",
+    ),
+    eq("}}}")
 );
+
 const escapechar: parserfunc = seq(
     eq("~"),
     symbol(not(empty), "rawtext"),
