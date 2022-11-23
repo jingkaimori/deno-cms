@@ -55,13 +55,17 @@ export function guard<T extends contextValue = emptyContext>(
  * @param name 
  * @returns 
  */
-export function symbol<T extends contextValue = emptyContext>(func: parserfunc<T>, name: parservar<string, T>): parserfunc<T> {
+export function symbol<T extends contextValue = emptyContext>(
+    func: parserfunc<T>, name: parservar<string, T>, 
+    auxupdator:(context:Readonly<T>)=>detached["auxilary"] = ()=>({})
+): parserfunc<T> {
     const __symbol: parserfunc<T> = (str, subtree, context, stack, event) => {
         const namevalue = value(name, subtree, context);
         const childsymbol = new treeNode<detached>(namevalue);
         const [receive, laststr] = func(str, childsymbol, context, stack, event);
         if (receive) {
             subtree.appendchild(childsymbol);
+            childsymbol.auxilary = auxupdator(context)
             childsymbol.raw = consumedstr(str, laststr);
         }
         return [receive, laststr];
@@ -142,15 +146,15 @@ export function scope< newType extends contextValue,oldType extends contextValue
 export function modifycontext<T extends contextValue = emptyContext>(
     func: parserfunc<T>,
     modifier: (
-        context: contextValue,
-        str: string,
+        context: T,
+        consumedstr: string,
         laststr: string,
     ) => void,
 ): parserfunc<T> {
     return (str: string, subtree, context, stack, event) => {
         const [receive, laststr] = func(str, subtree, context, stack, event);
         if (receive) {
-            modifier(context, str, laststr);
+            modifier(context, consumedstr(str, laststr), laststr);
         }
         return [receive, laststr];
     };
