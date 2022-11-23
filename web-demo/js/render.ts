@@ -70,22 +70,15 @@ const mappers = new Processors<processer>({
     "trow":mapToNode("tr"),
     "tcell":mapToNode("td"),
     "linktext": omitTreeNode,
-    "__path": function (tree, output, _context) {
-        const res = /^url:(.*)/.exec(tree.raw)
-        if (res) {
-            (output as HTMLAnchorElement).setAttribute(
-                "href",
-                res[1],
-            );
-        } else {
-            (output as HTMLAnchorElement).setAttribute(
-                "href",
-                getArticleTitle(tree.raw),
-            );
-        }
+    "linkarticle": function (tree, output, _context) {
+        (output as HTMLAnchorElement).setAttribute(
+            "href",
+            getArticleTitle(tree.raw),
+        );
         return [output];
     },
     "__plain": omitTreeNode,
+    "concrete": omitTreeNode,
     "text": mapToText,
     "rawtext": mapToText,
     "titletext": mapToText,

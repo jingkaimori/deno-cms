@@ -364,6 +364,21 @@ function postprocess(tree: semanticsTreeNode) {
         if (delimnode) {
             tree.removechild(delimnode);
         }
+    } else if (tree.name == "link") {
+        const pathnode = tree.childByName("__path")
+        if (pathnode !== undefined) {
+            const res = /^url:(.*)/.exec(pathnode.raw)
+            if (res) {
+                pathnode.name = "linkdest"
+                pathnode.raw = res[1]
+            } else {
+                pathnode.name = "linkarticle";
+            }
+        }
+        const labelnode = tree.childByName("__label")
+        if(labelnode!== undefined){
+            labelnode.name = "text"
+        }
     } else { /* nothing */ }
 
     for (const i of tree.childs) {

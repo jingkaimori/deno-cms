@@ -39,6 +39,13 @@ function convertToTreeNode(obj:marked.Token,parent:semanticsTreeNode){
     }else if(obj.type == "escape"){
         node.name = "rawtext"
         node.raw = obj.text
+    }else if(obj.type == "text"){
+        // text token which contains subnode is concrete node
+        // since santilizer option is unset, tag should have 'html' type
+        const textobj = obj as marked.Tokens.Text
+        if(typeof textobj.tokens !== 'undefined'){
+            node.name = "concrete"
+        }
     }
 
     if(obj.type == "code"){
