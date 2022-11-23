@@ -86,24 +86,66 @@ Deno.test({
 Deno.test({
     name: "list() test",
     fn(): void {
-        assertObjectMatch(
-            doc(
-                "\
+        const res = doc(
+            "\
 * c\n\
 * e\n\
 ** ca\n\
 ** cb\n\
 *** cca\n\
-* c\n\
+* frog\n\
 * c\n",
-            ),
+        )
+        assertObjectMatch(
+            res,
             {
                 success: true,
                 leftstr: "",
             },
         );
+        assertObjectMatch(
+            res.tree.toPlainObject(),
+            {
+                childs: [
+                    {
+                        name: "ulist",
+                        childs: [
+                            {
+                                name: "item",
+                                childs: [
+                                    {
+                                        name: "text",
+                                        raw: " c"
+                                    }]
+                            }, {
+                                name: "item",
+                                childs: [
+                                    {
+                                        name: "text",
+                                        raw: " e"
+                                    }, {
+                                        name: "ulist"
+                                    }]
+                            }, {
+                                name: "item",
+                                childs: [
+                                    {
+                                        name: "text",
+                                        raw: " frog"
+                                    }]
+                            }, {
+                                name: "item",
+                                childs: [
+                                    {
+                                        name: "text",
+                                        raw: " c"
+                                    }]
+                            }]
+                    }]
+            })
     },
 });
+
 Deno.test({
     name: "ordered list() test",
     fn(): void {
@@ -123,30 +165,30 @@ Deno.test({
         assertObjectMatch(
             res.tree.toPlainObject(),
             {
-                childs: [{
-                    name: "olist",
-                    childs: [{
-                        name: "item",
-                        childs: [{
-                            name: "text"
-                        }
-                        ]
-                    },
+                childs: [
                     {
-                        name: "olist"
-                    }
-                    ]
-                }
-                ]
-            }
-        )
+                        name: "olist",
+                        childs: [
+                            {
+                                name: "item",
+                                childs: [
+                                    {
+                                        name: "text"
+                                    }, {
+                                        name: "olist"
+                                    }
+                                ]
+                            }]
+                    }]
+            })
     },
 });
+
 Deno.test({
-    name: "macro() test",
+    name: "one tag macro() test",
     fn(): void {
         const res = doc(
-            "{{toc/}}",
+            "{{toc attr=\"\" /}}",
         );
         assertObjectMatch(
             res,
@@ -161,11 +203,15 @@ Deno.test({
                 childs: [
                     {
                         name: "template",
-                        childs: []
-                    }
-                ]
-            }
-        )
+                        childs: [
+                            {
+                                name: "__name"
+                            },
+                            {
+                                name: "template-attr"
+                            }]
+                    }]
+            })
         console.log(res.tree.toString());
     },
 });
@@ -191,8 +237,7 @@ Deno.test({
                         name: "rawtext",
                         raw: "/abc",
                         childs: []
-                    }
-                ]
+                    }]
             }
         )
     }
@@ -230,22 +275,17 @@ Deno.test({
                                 childs: [
                                     {
                                         name: "theadcell"
-                                    }
-                                ]
+                                    }]
                             },
                             {
                                 name: "trow",
                                 childs: [
                                     {
                                         name: "tcell"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        )
+                                    }]
+                            }]
+                    }]
+            })
         console.log(res.tree.toString());
     },
 });

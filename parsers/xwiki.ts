@@ -109,7 +109,10 @@ function particleinmiddle(
  */
 const macroattr: parserfunc = seq(
     whitespace,
-    multiple(not(or(eq("}}"), eq("/}}"), linebreak, empty))),
+    multiple(
+        symbol(
+            not(or(eq("}}"), eq("/}}"), linebreak, empty)),
+            "template-attr")),
 );
 
 const macroname: parserfunc = symbol(match(/^[^ \/{}\n]*/), "__name");
@@ -196,6 +199,7 @@ export const followeditem: parserfunc<listContext> = symbol(
         ),
         inline,
         match(/[\n\r]/),
+        multiple(getparserfunc(()=>(sublist)),0,2)
     ),
     "__listitemnew"
 )
@@ -213,6 +217,7 @@ export const firstitem:parserfunc<listContext> = symbol(
         ),
         inline,
         match(/[\n\r]/),
+        multiple(getparserfunc(()=>(sublist)),0,2)
     ),
     "__listitemnew"
 )
@@ -222,8 +227,7 @@ symbol(
     scope<listContext,listContext>(
     seq(
         firstitem,
-        multiple(
-            or(followeditem, getparserfunc(()=>(sublist))))
+        multiple(followeditem)
     ),(context)=>context
     ),"__list"
 )
