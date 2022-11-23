@@ -1,17 +1,16 @@
 import { semanticsTreeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
-type contextType = Record<string, any>;
 type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "toc"
 
 
 function mapToNode(name: allowedHTMLNodeType): processer {
-    return function (_tree, output, _context) {
+    return function (_tree, output) {
         const title = document.createElement(name);
         output.append(title);
         return [title];
     };
 }
-const mapToText: processer = (tree, output, _context) => {
+const mapToText: processer = (tree, output) => {
         const rawtext = tree.raw;
         const text = document.createElement("span");
         text.innerText = rawtext;
@@ -20,15 +19,14 @@ const mapToText: processer = (tree, output, _context) => {
         return [output];
     };
 
-const omitTreeNode: processer = (_i,r,_c) => [r]
+const omitTreeNode: processer = (_i,r) => [r]
 
 type processer = (
     iptTree: Readonly<semanticsTreeNode>,
     resTree: HTMLElement,
-    context: contextType,
 ) => [HTMLElement];
 const mappers = new Processors<processer>({
-    "title": function name(tree, output, _context) {
+    "title": function name(tree, output) {
         // const match = tree.raw.match(/^=+/);
         // let lth = match?.at(0)?.length;
         const lth = tree.auxilary.level;
@@ -58,7 +56,7 @@ const mappers = new Processors<processer>({
     "code": mapToNode("pre"),
     "template-cite": mapToNode("cite"),
     "template-toc": mapToNode("toc"),
-    "template-formula": (_tree, output, _context) => {
+    "template-formula": (_tree, output) => {
         let title = document.createElement("formula");
         //let math = katex.__parse(tree.childs[0]?.raw,{});
         //console.log(math);
@@ -70,7 +68,7 @@ const mappers = new Processors<processer>({
     "trow":mapToNode("tr"),
     "tcell":mapToNode("td"),
     "linktext": omitTreeNode,
-    "linkarticle": function (tree, output, _context) {
+    "linkarticle": function (tree, output) {
         (output as HTMLAnchorElement).setAttribute(
             "href",
             getArticleTitle(tree.raw),
@@ -96,39 +94,25 @@ const mappers = new Processors<processer>({
     "em": mapToNode("em"),
     "codespan": mapToNode("code"),
     "del": mapToNode("del"),
-}, (i, r, c) => {
+}, (i, r) => {
     console.warn("unknown node: " + i.name);
     console.info(i)
-    return omitTreeNode(i,r,c);
+    return omitTreeNode(i,r);
 });
 
 export function mapNode(
     iptTree: Readonly<semanticsTreeNode>,
     resTree: HTMLElement,
-    contextStack: contextType[],
     renderMap: WeakMap<HTMLElement, semanticsTreeNode>,
-): [HTMLElement, contextType] {
+): [HTMLElement] {
     //console.group(iptTree.parentNode?.nodeName)
     //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
     const passSelected = mappers.getProcessor(iptTree.name);
-    const context = contextStack.reduce(
-        (pre, cur) => {
-            return Object.assign(pre, cur);
-        },
-        {},
-    );
-    let newScope = undefined;
-    [resTree] = passSelected(iptTree, resTree, context);
-    if (newScope !== undefined) {
-        contextStack.push(newScope);
-    } /* do nothing */
-    else {
+    [resTree] = passSelected(iptTree, resTree);
         for (const i of iptTree.childs) {
-            mapNode(i, resTree, contextStack, renderMap);
+            mapNode(i, resTree, renderMap);
         }
-    }
-    //console.groupEnd()
-    return [resTree, context];
+    return [resTree];
 }
 
 export function getArticleTitle(filename: string) {

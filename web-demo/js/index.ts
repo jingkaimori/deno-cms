@@ -148,14 +148,13 @@ const observer = new MutationObserver(onMutation)
  * @param tree 
  */
 const renderDoc = (tree:Readonly<rootTreeNode>) => {
-  console.log(tree);
+  console.log(tree.toPlainObject());
   // let displayTree = tree.cloneNode(true)
   const displayTreeRoot = document.createElement("div")
   console.groupCollapsed()
   const [displayTree] = mapNode(
     tree,
     displayTreeRoot,
-    [{ mode: "none" }],
     treeHTMLMap
   );
   console.groupEnd()
