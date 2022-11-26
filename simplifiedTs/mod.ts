@@ -1,4 +1,4 @@
-import { path, fs, ts } from "../deps.ts";
+import { path, fs, ts } from "./deps.ts";
 
 const LibPrefix = "node_modules/@typescript"
 const defaultLib = "lib.default.d.ts"

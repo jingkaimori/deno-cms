@@ -4,7 +4,7 @@ import * as markdown from "../../parsers/borrowed/markdown.ts"
 import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site } from "../../types/repository.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
-import { path } from "../../deps.ts"
+import { path } from "./deps.ts"
 
 const mode = {meta:"local",format:"tmml"};
 const treeHTMLMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
