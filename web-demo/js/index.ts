@@ -133,6 +133,14 @@ const renderResult = (content:string,res:boolean,rest:string) => {
   }
 }
 
+const exampleSocket = new WebSocket("ws://localhost:8400/","dcms")
+exampleSocket.onmessage = (event) => {
+  console.log(event.data);
+}
+exampleSocket.onopen = (event) => {
+  exampleSocket.send("Here's some text that the server is urgently awaiting!");
+};
+
 const onMutation:MutationCallback = (records) => {
   for (const record of records) {
     if (record.type == "childList") {
