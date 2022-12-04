@@ -125,21 +125,40 @@ export class Client<T extends serverFunctions> {
     }
 }
 
-export function webSocket2Channel(socket:WebSocket):Promise<Channel> {
-    return new Promise((resolve,reject) => {
-        socket.onopen = ()=>{
-            resolve(socketWrapper(socket))
-            socket.onopen = null
-        }
-        socket.onerror = ()=>{
-            reject()
-        }
+export function webSocket2Channel(socket:WebSocket): Promise<Channel>{
+  if (socket.readyState === socket.OPEN) {
+    return Promise.resolve(socketWrapper(socket))
+  } else if (
+    socket.readyState === socket.CONNECTING 
+    || (socket instanceof WebSocket && socket.readyState === undefined)) //HACK: websocket create by deno may have this field undefined
+  {
+    return new Promise((resolve,reject) =>{
+      socket.onopen = ()=>{
+        resolve(socketWrapper(socket))
+        socket.onopen = null
+      }
+      socket.onerror = (err)=>{
+        reject(err)
+        socket.onerror = null
+      }
+
     })
+  } else if (socket.readyState === socket.CLOSED || socket.readyState === socket.CLOSING) {
+    return Promise.reject(new Error("socket inner error"))
+  } else {
+    return Promise.reject(new Error(
+      "socket status error, current socket detail:\n"
+      + " socket object: " + socket  + "\n" 
+      + " socket state: " + socket.readyState + "\n"
+      + " socket url: " + socket.url))
+  }
+
 }
 
-function socketWrapper(socket: WebSocket): Channel {
+function socketWrapper(socket:WebSocket):Channel {
   return {
     send(string) {
+      console.log(socket.readyState)
       socket.send(string);
     },
     [Symbol.asyncIterator]() {
@@ -161,9 +180,11 @@ function socketWrapper(socket: WebSocket): Channel {
               });
             };
             socket.onerror = (ev) => {
+              console.log("socket disrupted")
               reject(ev);
             };
             socket.onclose = (_e) => {
+              console.log("socket closed")
               resolve({
                 done: true,
                 value: undefined
