@@ -135,15 +135,7 @@ const renderResult = (content:string,res:boolean,rest:string) => {
   }
 }
 
-const exampleSocket = new WebSocket("ws://localhost:8400/","dcms")
-const exampleChannel = await webSocket2Channel(exampleSocket)
-const client = new Client<webinterface>()
-client.connect(exampleChannel)
-let result = await client.call('readArticle', new Uint8Array([1]))
-// console.log(exampleSocket.readyState)
-console.log(result)
-result = await client.call('readArticle', new Uint8Array([255]))
-console.log(result)
+RPCTest();
 
 const onMutation:MutationCallback = (records) => {
   for (const record of records) {
@@ -190,4 +182,16 @@ const renderDoc = (tree:Readonly<rootTreeNode>) => {
 const clearChilds = (element: HTMLElement): void => {
   Array.from(element.childNodes)
     .forEach(element.removeChild, element);
+}
+
+async function RPCTest() {
+  const exampleSocket = new WebSocket("ws://localhost:8400/", "dcms");
+  const exampleChannel = await webSocket2Channel(exampleSocket);
+  const client = new Client<webinterface>();
+  client.connect(exampleChannel);
+  let result = await client.call('readArticle', new Uint8Array([1]));
+  // console.log(exampleSocket.readyState)
+  console.log(result);
+  result = await client.call('readArticle', new Uint8Array([255]));
+  console.log(result);
 }
