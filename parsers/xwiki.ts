@@ -14,13 +14,14 @@ import {
     seq,
     symbol,
     scope,
+    modifycontext,
 } from "../macros/macros.ts";
 
 const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 
 const linebreak: parserfunc = multiple(match(/[\n\r]/), 1);
 
-export const titletext: parserfunc = symbol(
+const titletext: parserfunc = symbol(
     particleinmiddle(
         multiple(match(/[^\n\r=]/), 1),
         eq("="),
@@ -28,14 +29,33 @@ export const titletext: parserfunc = symbol(
     "titletext",
 );
 
-export const title: parserfunc = symbol(
-    seq(
-        eq("="),
-        or(getparserfunc(()=>(title)), titletext),
-        eq("="),
-    ),
-    "title",
-);
+type titleContext = {
+    titledepth:number
+}
+
+const titleinner: parserfunc<titleContext> = 
+modifycontext<titleContext>(seq(
+    eq("="),
+    or(getparserfunc(()=>(titleinner)), titletext),
+    eq("="),
+),(context)=>{context.titledepth += 1})
+
+export const title: parserfunc = scope<titleContext>(
+    symbol(
+        titleinner,
+        "title",
+        (context)=>{
+            const res = {
+                level:context.titledepth
+            }
+            return res;
+        }
+    ),(context)=>{
+        const newcontext = context as titleContext
+        newcontext.titledepth = 0
+        return newcontext;
+});
+
 
 const path: parserfunc = symbol(
     multiple(match(/[^\n\r\]>]/)),

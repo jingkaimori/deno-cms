@@ -1,36 +1,40 @@
 import { assertObjectMatch, } from "../deps.ts";
-import { doc, escape, link, title, titletext } from "./xwiki.ts";
+import { doc, escape, link, title } from "./xwiki.ts";
 import { getparser } from "../macros/macros.ts";
 
 Deno.test({
     name: "title() test",
     fn(): void {
         const titleparser = getparser(title);
-        assertObjectMatch(titleparser("=== title ==="), {
+        const res = titleparser("=== title ===")
+        assertObjectMatch(res, {
             success: true,
             leftstr: "",
         });
+        assertObjectMatch(
+            res.tree.toPlainObject(),
+            {
+                childs:[
+                    {
+                        name:"title",
+                        raw:"=== title ===",
+                        childs:[
+                            {
+                                name:"titletext",
+                                raw:" title ",
+                                childs:[]
+                            }
+                        ],
+                        auxilary:{
+                            level:3
+                        }
+                    }
+                ]
+            }
+        )
         assertObjectMatch(titleparser("=== title =="), {
             success: false,
             leftstr: "=== title ==",
-        });
-    },
-});
-Deno.test({
-    name: "titletext() test",
-    fn(): void {
-        const titletextparser = getparser(titletext);
-        assertObjectMatch(titletextparser(" title "), {
-            success: true,
-            leftstr: "",
-        });
-        assertObjectMatch(titletextparser(" title ="), {
-            success: true,
-            leftstr: "=",
-        });
-        assertObjectMatch(titletextparser("= title "), {
-            success: false,
-            leftstr: "= title ",
         });
     },
 });
