@@ -14,7 +14,6 @@ const mapToText: processer = (tree, output) => {
         const rawtext = tree.raw;
         const text = document.createElement("span");
         text.innerText = rawtext;
-        text.setAttribute("contenteditable","");
         output.append(text);
         return [output];
     };
@@ -57,7 +56,7 @@ const mappers = new Processors<processer>({
     "template-cite": mapToNode("cite"),
     "template-toc": mapToNode("toc"),
     "template-formula": (_tree, output) => {
-        let title = document.createElement("formula");
+        const title = document.createElement("formula");
         //let math = katex.__parse(tree.childs[0]?.raw,{});
         //console.log(math);
         output.append(title);

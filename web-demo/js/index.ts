@@ -133,20 +133,14 @@ const renderResult = (content:string,res:boolean,rest:string) => {
     (document.querySelector("#diff > #front") as HTMLSpanElement).innerText = beginp;
     (document.querySelector("#diff > #end") as HTMLSpanElement).innerText = endp;
   }
+  document.addEventListener('selectionchange',(ev)=>{
+    console.log('selectchange')
+    console.log(document.getSelection())
+  })
 }
 
 RPCTest();
 
-const onMutation:MutationCallback = (records) => {
-  for (const record of records) {
-    if (record.type == "childList") {
-      
-    }
-  }
-  console.log(records)
-}
-
-const observer = new MutationObserver(onMutation)
 /**
  * convert semantic tree into DOM tree
  * @param tree 
@@ -162,12 +156,6 @@ const renderDoc = (tree:Readonly<rootTreeNode>) => {
     treeHTMLMap
   );
   console.groupEnd()
-  observer.observe(displayTree,{
-    subtree: true,
-    childList: true,
-    characterData: true,
-    attributes: true,
-  })
   console.log(displayTree);
 
   const renderedDoc: HTMLDivElement =
