@@ -114,6 +114,10 @@ const renderResult = (content:string,res:boolean,rest:string) => {
   }
 
   console.log(rest)
+  const frontElement = document.querySelector("#diff > #front") as HTMLSpanElement
+  const endElement = document.querySelector("#diff > #end") as HTMLSpanElement
+  clearChilds(frontElement);
+  clearChilds(endElement);
   if(rest.length==0){
     //all chars are used, no need to get rest chars
   }else{
@@ -130,13 +134,9 @@ const renderResult = (content:string,res:boolean,rest:string) => {
       endp = rest.slice(0,endi);
     }
 
-    (document.querySelector("#diff > #front") as HTMLSpanElement).innerText = beginp;
-    (document.querySelector("#diff > #end") as HTMLSpanElement).innerText = endp;
+    frontElement.textContent = beginp
+    endElement.textContent = endp
   }
-  document.addEventListener('selectionchange',(ev)=>{
-    console.log('selectchange')
-    console.log(document.getSelection())
-  })
 }
 
 RPCTest();
@@ -161,8 +161,6 @@ const renderDoc = (tree:Readonly<rootTreeNode>) => {
   const renderedDoc: HTMLDivElement =
     (document.querySelector("#rendered") as HTMLDivElement);
     clearChilds(renderedDoc);
-    clearChilds((document.querySelector("#diff > #front") as HTMLSpanElement));
-    clearChilds((document.querySelector("#diff > #end") as HTMLSpanElement));
   renderedDoc.appendChild(displayTree);
   
 }
@@ -171,6 +169,86 @@ const clearChilds = (element: HTMLElement): void => {
   Array.from(element.childNodes)
     .forEach(element.removeChild, element);
 }
+
+const nodeIsChild = (node:Node | null | undefined): node is ChildNode => {
+  const parent = node?.parentElement
+  return !(parent === null || parent === undefined)
+}
+
+  // deno-lint-ignore no-explicit-any
+const throttleEventHandler = <handlerType extends (this: EventTarget, event:Event)=>any>(handler: handlerType):handlerType =>{
+  let counter = 0;
+  // deno-lint-ignore no-explicit-any
+  return (function (this:EventTarget,event:Event):any {
+    const timediff = event.timeStamp - counter
+    if (timediff > 8) {
+      counter = event.timeStamp
+      return handler.call(this,event)
+    } else {
+      return;
+    }
+  } as handlerType)
+}
+
+// const cursorcontainer = document.createElement('span')
+// cursorcontainer.classList.add("cursorcontainer")
+const cursor = document.createElement('span')
+cursor.classList.add("cursor")
+const renderCursor = throttleEventHandler((ev:Event)=>{
+  console.group('selectchange')
+  console.log(ev)
+  const selection = document.getSelection();
+  if (selection === null) {
+    cursor.remove()
+    console.log("selection clear")
+    console.groupEnd()
+    return;
+  }
+  if (selection.type == 'None') {
+    cursor.remove()
+    console.log("selection clear")
+    console.groupEnd()
+    return;
+  }else if(selection.type == 'Caret'){
+    console.log(selection)
+    const renderedDoc: HTMLDivElement =
+    (document.querySelector("#rendered") as HTMLDivElement);
+    const anchorNode = selection.anchorNode;
+    if (!renderedDoc.contains(anchorNode) ) {
+      cursor.remove()
+      console.log("outside editor")
+      console.groupEnd()
+      return;
+    } else if (cursor.isSameNode(anchorNode)) {
+      console.log("oncursor")
+      console.groupEnd()
+      return;
+    } else {
+      
+      if (!nodeIsChild(anchorNode)) {
+        console.groupEnd()
+        return;
+      }
+
+      const text = selection.anchorNode?.textContent
+      if (text) {
+        if (selection.anchorOffset === 0) {
+          console.log("curser in begin")
+          anchorNode.before(cursor);
+        } else {
+          const beforeselect = text.slice(0,selection.anchorOffset)
+          const afterselect = text.substring(selection.anchorOffset)
+          const after = document.createTextNode(afterselect)
+          anchorNode.textContent = beforeselect;
+          anchorNode.after(cursor,after);
+        }
+      }
+      console.groupEnd()
+    }
+  }
+})
+
+document.addEventListener('selectionchange',renderCursor)
 
 async function RPCTest() {
   const exampleSocket = new WebSocket("ws://localhost:8400/", "dcms");

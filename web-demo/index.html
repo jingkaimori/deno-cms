@@ -3,6 +3,9 @@
     <head>
         <title>Test </title>
         <style>
+            body{
+                line-height: 1.5;
+            }
             h1 h2 h3 h4 h5 h6{
                 display: inline-block;
             }
@@ -11,6 +14,23 @@
             }
             .stats .success{
                 color: #419341;
+            }
+            .cursor::before {
+                position: absolute;
+                display: inline-block;
+                width: 2px;
+                height: calc(1.5 * 1em);
+                content: "";
+                border-left: 2px solid crimson;
+            }
+            .cursor {
+                position: relative;
+                left: -1px;
+            }
+            
+            .rendered ::selection{
+                color: initial;
+                background-color: initial;
             }
         </style>
     </head>
@@ -27,6 +47,9 @@
         <ul id="list">
             
         </ul>
+        <div contenteditable="true">
+            <span id="t1" style="background-color: red;">test</span> text
+        </div>
         <script type="module" src="js/index.js"></script>
     </body>
 </html>
