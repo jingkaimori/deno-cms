@@ -1,3 +1,7 @@
+export function getArticleTitle(filename: string) {
+    return ("./export/" + filename.replace(/\./g, "/") + ".xml");
+  }
+
 export const clearChilds = (element: HTMLElement): void => {
     Array.from(element.childNodes)
       .forEach(element.removeChild, element);

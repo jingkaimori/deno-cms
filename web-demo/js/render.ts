@@ -1,6 +1,7 @@
 import type { semanticsTreeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
 import { getEditableTextNode } from "./index.ts";
+import { getArticleTitle } from "./utility.ts";
 type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "toc"
 
 
@@ -153,6 +154,3 @@ export function mapNode(
     return [resElem];
 }
 
-export function getArticleTitle(filename: string) {
-    return ("./export/" + filename.replace(/\./g, "/") + ".xml");
-}

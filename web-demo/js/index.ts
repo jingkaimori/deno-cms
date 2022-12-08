@@ -3,9 +3,9 @@ import type { rootTreeNode } from "../../macros/macros.ts";
 import * as markdown from "../../parsers/borrowed/markdown.ts"
 import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site } from "../../types/repository.ts";
-import { getArticleTitle, mapNode } from "./render.ts";
+import { mapNode } from "./render.ts";
 import { path } from "./deps.ts"
-import { clearChilds } from "./utility.ts";
+import { clearChilds, getArticleTitle } from "./utility.ts";
 import { RPCTest } from "./remote.ts";
 
 const mode = {meta:"local",format:"tmml"};
