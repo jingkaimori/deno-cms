@@ -166,3 +166,19 @@ const renderDoc = (tree:rootTreeNode) => {
   renderedDoc.appendChild(displayTree);
   
 }
+
+export const getEditableTextNode = (rawtext:string) => {
+  const text = document.createElement("span");
+  text.innerText = rawtext;
+  text.contentEditable = "true";
+  text.addEventListener("input",function (ev){
+    if (treeHTMLTextMap.has(this)) {
+      const tree = treeHTMLTextMap.get(this) as rootTreeNode
+      tree.raw = this.textContent || ""
+    } else {
+      throw new Error("why target is not a text node?");
+      
+    }
+  })
+  return text
+}

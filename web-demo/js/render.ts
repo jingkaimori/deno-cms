@@ -1,5 +1,6 @@
-import { semanticsTreeNode } from "../../macros/macros.ts";
+import type { semanticsTreeNode } from "../../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
+import { getEditableTextNode } from "./index.ts";
 type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "toc"
 
 
@@ -15,8 +16,7 @@ function mapToNode(name: allowedHTMLNodeType): processer {
 }
 const mapToText: processer = (tree, output) => {
         const rawtext = tree.raw;
-        const text = document.createElement("span");
-        text.innerText = rawtext;
+        const text = getEditableTextNode(rawtext)
         output.append(text);
         return {
             resElem: text,
@@ -144,7 +144,9 @@ export function mapNode(
     const {resElem,mapType} = passSelected(iptTree, resParent);
     if (mapType == MapType.Node) {
         nodeMap.set(resElem,iptTree)
-    } 
+    } else if (mapType == MapType.Text) {
+        textMap.set(resElem,iptTree)
+    }
     for (const i of iptTree.childs) {
         mapNode(i, resElem, nodeMap, textMap);
     }
