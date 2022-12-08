@@ -9,7 +9,8 @@ import { Client, webSocket2Channel } from "../../server/protocol.ts";
 import { webinterface } from "../../server/index.ts";
 
 const mode = {meta:"local",format:"tmml"};
-const treeHTMLMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
+const treeHTMLNodeMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
+const treeHTMLTextMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
 
 const selectElem = document.querySelector("#format") as HTMLSelectElement
 selectElem.addEventListener("change",(_ev)=>{
@@ -145,7 +146,7 @@ RPCTest();
  * convert semantic tree into DOM tree
  * @param tree 
  */
-const renderDoc = (tree:Readonly<rootTreeNode>) => {
+const renderDoc = (tree:rootTreeNode) => {
   console.log(tree.toPlainObject());
   // let displayTree = tree.cloneNode(true)
   const displayTreeRoot = document.createElement("div")
@@ -153,10 +154,11 @@ const renderDoc = (tree:Readonly<rootTreeNode>) => {
   const [displayTree] = mapNode(
     tree,
     displayTreeRoot,
-    treeHTMLMap
+    treeHTMLNodeMap,
+    treeHTMLTextMap
   );
   console.groupEnd()
-  console.log(displayTree);
+  console.log(treeHTMLNodeMap, treeHTMLTextMap);
 
   const renderedDoc: HTMLDivElement =
     (document.querySelector("#rendered") as HTMLDivElement);

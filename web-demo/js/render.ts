@@ -5,9 +5,12 @@ type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "to
 
 function mapToNode(name: allowedHTMLNodeType): processer {
     return function (_tree, output) {
-        const title = document.createElement(name);
-        output.append(title);
-        return [title];
+        const node = document.createElement(name);
+        output.append(node);
+        return {
+            resElem: node,
+            mapType: MapType.Node
+        };
     };
 }
 const mapToText: processer = (tree, output) => {
@@ -15,15 +18,27 @@ const mapToText: processer = (tree, output) => {
         const text = document.createElement("span");
         text.innerText = rawtext;
         output.append(text);
-        return [output];
+        return {
+            resElem: text,
+            mapType: MapType.Text
+        };
     };
 
-const omitTreeNode: processer = (_i,r) => [r]
+const omitTreeNode: processer = (_i,r) => ({
+    resElem: r,
+    mapType: MapType.Omit
+})
+
+enum MapType {
+    Node,
+    Text,
+    Omit
+}
 
 type processer = (
     iptTree: Readonly<semanticsTreeNode>,
-    resTree: HTMLElement,
-) => [HTMLElement];
+    resParent: HTMLElement,
+) => {resElem: HTMLElement, mapType: MapType};
 const mappers = new Processors<processer>({
     "title": function name(tree, output) {
         // const match = tree.raw.match(/^=+/);
@@ -32,11 +47,17 @@ const mappers = new Processors<processer>({
         if (typeof lth == "number") {
             const title = document.createElement("h" + lth.toString());
             output.append(title);
-            return [title];
+            return {
+                resElem: title,
+                mapType: MapType.Node
+            };
         } else {
             const title = document.createElement("p");
             output.append(title);
-            return [title];
+            return {
+                resElem: title,
+                mapType: MapType.Node
+            };
         }
     },
     "root": mapToNode("article"),
@@ -60,7 +81,10 @@ const mappers = new Processors<processer>({
         //let math = katex.__parse(tree.childs[0]?.raw,{});
         //console.log(math);
         output.append(title);
-        return [title];
+        return {
+            resElem: title,
+            mapType: MapType.Node
+        };
     },
     "table":mapToNode("table"),
     "theadcell":mapToNode("th"),
@@ -72,7 +96,10 @@ const mappers = new Processors<processer>({
             "href",
             getArticleTitle(tree.raw),
         );
-        return [output];
+        return {
+            resElem: output,
+            mapType: MapType.Omit
+        };
     },
     "__plain": omitTreeNode,
     "concrete": omitTreeNode,
@@ -82,11 +109,17 @@ const mappers = new Processors<processer>({
     "link":  mapToNode("a"),
     "linkdest":(tree,output)=>{
         output.setAttribute("href", String( tree.raw));
-        return [output]
+        return {
+            resElem: output,
+            mapType: MapType.Omit
+        };
     },
     "hint":(tree,output)=>{
         output.setAttribute("title", String( tree.raw));
-        return [output]
+        return {
+            resElem: output,
+            mapType: MapType.Omit
+        };
     },
     "blockquote": mapToNode("blockquote"),
     "strong": mapToNode("strong"),
@@ -100,18 +133,22 @@ const mappers = new Processors<processer>({
 });
 
 export function mapNode(
-    iptTree: Readonly<semanticsTreeNode>,
-    resTree: HTMLElement,
-    renderMap: WeakMap<HTMLElement, semanticsTreeNode>,
+    iptTree: semanticsTreeNode,
+    resParent: HTMLElement,
+    nodeMap: WeakMap<HTMLElement, semanticsTreeNode>,
+    textMap: WeakMap<HTMLElement, semanticsTreeNode>,
 ): [HTMLElement] {
     //console.group(iptTree.parentNode?.nodeName)
     //console.info(`${iptTree.parentNode?.nodeName}->${iptTree.nodeName}`,resTree.nodeName)
     const passSelected = mappers.getProcessor(iptTree.name);
-    [resTree] = passSelected(iptTree, resTree);
-        for (const i of iptTree.childs) {
-            mapNode(i, resTree, renderMap);
-        }
-    return [resTree];
+    const {resElem,mapType} = passSelected(iptTree, resParent);
+    if (mapType == MapType.Node) {
+        nodeMap.set(resElem,iptTree)
+    } 
+    for (const i of iptTree.childs) {
+        mapNode(i, resElem, nodeMap, textMap);
+    }
+    return [resElem];
 }
 
 export function getArticleTitle(filename: string) {
