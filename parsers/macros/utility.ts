@@ -1,4 +1,4 @@
-import { plainDocument } from "../types/data.ts";
+import { plainDocument } from "../../types/data.ts";
 import type { parser, parserContextLabel, parserEvent, parserfunc, parservar, nodeType, rootTreeNode, contextValue } from "./types.ts";
 
 /**

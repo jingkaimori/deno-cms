@@ -6,7 +6,7 @@ import {
     seq,
     symbol,
     treeNode,
-} from "../macros/macros.ts";
+} from "./macros/macros.ts";
 
 import { followedlist, inline, listitemnew } from "./xwiki.ts";
 

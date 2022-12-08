@@ -1,5 +1,5 @@
 import { Lexer, marked } from "../../deps.ts";
-import { parser, treeNode, rootTreeNode, semanticsTreeNode } from "../../macros/macros.ts";
+import { parser, treeNode, rootTreeNode, semanticsTreeNode } from "../macros/macros.ts";
 
 export const doc:parser = (str)=>{
     const lexer = new Lexer({gfm:true});

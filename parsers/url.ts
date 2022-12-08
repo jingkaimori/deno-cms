@@ -1,5 +1,5 @@
-import { particleinmiddle } from "../macros/commonpattern.ts";
-import { charClasses, inClass, multiple, seq } from "../macros/macros.ts";
+import { particleinmiddle } from "./macros/commonpattern.ts";
+import { charClasses, inClass, multiple, seq } from "./macros/macros.ts";
 
 
 export const url = seq()

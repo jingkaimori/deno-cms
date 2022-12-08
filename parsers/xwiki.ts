@@ -15,7 +15,7 @@ import {
     symbol,
     scope,
     modifycontext,
-} from "../macros/macros.ts";
+} from "./macros/macros.ts";
 
 const whitespace: parserfunc = multiple(match(/[\t ]/), 1);
 

@@ -1,6 +1,6 @@
 import { assertObjectMatch, } from "../deps.ts";
 import { doc, escape, link, title } from "./xwiki.ts";
-import { getparser } from "../macros/macros.ts";
+import { getparser } from "./macros/macros.ts";
 
 Deno.test({
     name: "title() test",

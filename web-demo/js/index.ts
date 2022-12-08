@@ -1,5 +1,5 @@
 import * as xwiki from "../../parsers/xwiki.ts";
-import type { rootTreeNode } from "../../macros/macros.ts";
+import type { rootTreeNode } from "../../parsers/macros/macros.ts";
 import * as markdown from "../../parsers/borrowed/markdown.ts"
 import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site } from "../../types/repository.ts";

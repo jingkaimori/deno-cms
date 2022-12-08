@@ -1,8 +1,7 @@
 import { assertObjectMatch } from "../deps.ts";
-import { match, seq, treeNode, parser } from "../macros/macros.ts";
+import { parser } from "./macros/macros.ts";
 import * as local from "./markdown.ts";
 import * as borrow from "./borrowed/markdown.ts"
-import { assert } from "https://deno.land/std@0.160.0/_util/assert.ts";
 
 Deno.test({
     name: "title() test",
@@ -21,7 +20,7 @@ Deno.test({
 Deno.test({
     name: "borrowed test",
     fn(): void {
-        let res=borrow.doc("\
+        const res=borrow.doc("\
 # Title\n\
 \n\
 paragraph 1\n\
@@ -33,7 +32,7 @@ paragraph [2](https://link.com/path/to/page) long Lorem ipsum dolor sit amet, co
 });
 
 const testpara = (fun:parser)=>{
-    let res=fun("\
+    const res=fun("\
 # Title\n\
 \n\
 paragraph 1\n\
