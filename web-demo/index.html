@@ -15,22 +15,13 @@
             .stats .success{
                 color: #419341;
             }
-            .cursor::before {
-                position: absolute;
-                display: inline-block;
-                width: 2px;
-                height: calc(1.5 * 1em);
-                content: "";
-                border-left: 2px solid crimson;
-            }
-            .cursor {
-                position: relative;
-                left: -1px;
-            }
             
-            .rendered ::selection{
+            #rendered ::selection{
                 color: initial;
                 background-color: initial;
+            }
+            #rendered {
+                caret-color: crimson;
             }
         </style>
     </head>

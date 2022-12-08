@@ -5,7 +5,7 @@ import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site } from "../../types/repository.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
 import { path } from "./deps.ts"
-import { clearChilds, throttleEventHandler, nodeIsChild } from "./utility.ts";
+import { clearChilds } from "./utility.ts";
 import { RPCTest } from "./remote.ts";
 
 const mode = {meta:"local",format:"tmml"};
@@ -140,7 +140,7 @@ const renderResult = (content:string,res:boolean,rest:string) => {
   }
 }
 
-  RPCTest();
+RPCTest();
 
 /**
  * convert semantic tree into DOM tree
@@ -166,61 +166,3 @@ const renderDoc = (tree:rootTreeNode) => {
   renderedDoc.appendChild(displayTree);
   
 }
-
-const cursor = document.createElement('span')
-cursor.classList.add("cursor")
-const renderCursor = throttleEventHandler((ev:Event)=>{
-  console.group('selectchange')
-  console.log(ev)
-  const selection = document.getSelection();
-  if (selection === null) {
-    cursor.remove()
-    console.log("selection clear")
-    console.groupEnd()
-    return;
-  }
-  if (selection.type == 'None') {
-    cursor.remove()
-    console.log("selection clear")
-    console.groupEnd()
-    return;
-  }else if(selection.type == 'Caret'){
-    console.log(selection)
-    const renderedDoc: HTMLDivElement =
-    (document.querySelector("#rendered") as HTMLDivElement);
-    const anchorNode = selection.anchorNode;
-    if (!renderedDoc.contains(anchorNode) ) {
-      cursor.remove()
-      console.log("outside editor")
-      console.groupEnd()
-      return;
-    } else if (cursor.isSameNode(anchorNode)) {
-      console.log("oncursor")
-      console.groupEnd()
-      return;
-    } else {
-      
-      if (!nodeIsChild(anchorNode)) {
-        console.groupEnd()
-        return;
-      }
-
-      const text = selection.anchorNode?.textContent
-      if (text) {
-        if (selection.anchorOffset === 0) {
-          console.log("curser in begin")
-          anchorNode.before(cursor);
-        } else {
-          const beforeselect = text.slice(0,selection.anchorOffset)
-          const afterselect = text.substring(selection.anchorOffset)
-          const after = document.createTextNode(afterselect)
-          anchorNode.textContent = beforeselect;
-          anchorNode.after(cursor,after);
-        }
-      }
-      console.groupEnd()
-    }
-  }
-})
-
-document.addEventListener('selectionchange',renderCursor)
