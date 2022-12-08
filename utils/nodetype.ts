@@ -1,8 +1,9 @@
-import { treeNode } from "./utility.ts";
+import { treeNode } from "./treenode.ts";
 
 export interface arbitary {
     type:string;
     parent:treeNode<arbitary>|null;
+    // deno-lint-ignore no-explicit-any
     auxilary:Record<string,any>;
 }
 

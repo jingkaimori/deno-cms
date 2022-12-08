@@ -6,9 +6,9 @@ import {
     contextValue,
     emptyContext,
 } from "./types.ts";
-import { cloneContext, errormessage, treeNode, value } from "./utility.ts";
+import { cloneContext, errormessage, value } from "./utility.ts";
 import { consumedstr } from "./internalutility.ts";
-import { detached } from "./nodetype.ts";
+import { treeNode, nodeType } from "../../utils/treenode.ts";
 /**
  * this variable turn on such checks
  * - left recurse
@@ -57,11 +57,11 @@ export function guard<T extends contextValue = emptyContext>(
  */
 export function symbol<T extends contextValue = emptyContext>(
     func: parserfunc<T>, name: parservar<string, T>, 
-    auxupdator:(context:Readonly<T>)=>detached["auxilary"] = ()=>({})
+    auxupdator:(context:Readonly<T>)=>nodeType.detached["auxilary"] = ()=>({})
 ): parserfunc<T> {
     const __symbol: parserfunc<T> = (str, subtree, context, stack, event) => {
         const namevalue = value(name, subtree, context);
-        const childsymbol = new treeNode<detached>(namevalue);
+        const childsymbol = new treeNode<nodeType.detached>(namevalue);
         const [receive, laststr] = func(str, childsymbol, context, stack, event);
         if (receive) {
             subtree.appendchild(childsymbol);

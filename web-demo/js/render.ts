@@ -1,5 +1,5 @@
-import type { semanticsTreeNode } from "../../parsers/macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
+import { semanticsTreeNode } from "../../utils/treenode.ts";
 import { getEditableTextNode } from "./index.ts";
 import { getArticleTitle } from "./utility.ts";
 type allowedHTMLNodeType = keyof HTMLElementTagNameMap | "box" | "warning" | "toc"

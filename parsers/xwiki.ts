@@ -1,7 +1,7 @@
+import { semanticsTreeNode } from "../utils/treenode.ts";
 import {
     empty,
     eq,
-    semanticsTreeNode,
     getparser,
     getparserfunc,
     match,

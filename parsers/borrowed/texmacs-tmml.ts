@@ -1,11 +1,9 @@
 import type {
-    semanticsTreeNode,
     parser,
     parserEvent,
-    rootTreeNode,
 } from "../macros/macros.ts";
-import { treeNode } from "../macros/macros.ts";
 import { Processors } from "../../utils/processer.ts";
+import { semanticsTreeNode, rootTreeNode, treeNode } from "../../utils/treenode.ts";
 
 export const doc: parser = (str) => {
     const parser = new DOMParser();

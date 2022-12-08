@@ -1,5 +1,4 @@
 import * as xwiki from "../../parsers/xwiki.ts";
-import type { rootTreeNode } from "../../parsers/macros/macros.ts";
 import * as markdown from "../../parsers/borrowed/markdown.ts"
 import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site } from "../../types/repository.ts";
@@ -7,6 +6,7 @@ import { mapNode } from "./render.ts";
 import { path } from "./deps.ts"
 import { clearChilds, getArticleTitle } from "./utility.ts";
 import { RPCTest } from "./remote.ts";
+import { rootTreeNode } from "../../utils/treenode.ts";
 
 const mode = {meta:"local",format:"tmml"};
 const treeHTMLNodeMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();

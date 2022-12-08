@@ -1,6 +1,6 @@
-import type { treeNode } from "./utility.ts";
-import type * as nodeType from "./nodetype.ts";
-export type result = [boolean, string];
+import { nodeType, treeNode } from "../../utils/treenode.ts";
+
+type result = [boolean, string];
 
 export type parserContextLabel = {type:string, strremain:string,func:parserfunc<contextValue>,context:contextValue};
 export type parserEvent = {type:string,context:parserContextLabel[],desc:string}
@@ -25,7 +25,3 @@ export type parser =
     }
 export type parservar<T,U extends contextValue = emptyContext> = 
     T|((subtree:Readonly<treeNode<nodeType.semantics>>, context:Readonly<U>)=>T)
-
-export * as nodeType from  "./nodetype.ts";
-export type rootTreeNode = treeNode<nodeType.root>
-export type semanticsTreeNode = treeNode<nodeType.semantics>
