@@ -5,8 +5,8 @@ import * as tmml from "../../parsers/borrowed/texmacs-tmml.ts"
 import { Site } from "../../types/repository.ts";
 import { getArticleTitle, mapNode } from "./render.ts";
 import { path } from "./deps.ts"
-import { Client, webSocket2Channel } from "../../server/protocol.ts";
-import { webinterface } from "../../server/index.ts";
+import { clearChilds, throttleEventHandler, nodeIsChild } from "./utility.ts";
+import { RPCTest } from "./remote.ts";
 
 const mode = {meta:"local",format:"tmml"};
 const treeHTMLNodeMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
@@ -140,7 +140,7 @@ const renderResult = (content:string,res:boolean,rest:string) => {
   }
 }
 
-RPCTest();
+  RPCTest();
 
 /**
  * convert semantic tree into DOM tree
@@ -167,33 +167,6 @@ const renderDoc = (tree:rootTreeNode) => {
   
 }
 
-const clearChilds = (element: HTMLElement): void => {
-  Array.from(element.childNodes)
-    .forEach(element.removeChild, element);
-}
-
-const nodeIsChild = (node:Node | null | undefined): node is ChildNode => {
-  const parent = node?.parentElement
-  return !(parent === null || parent === undefined)
-}
-
-  // deno-lint-ignore no-explicit-any
-const throttleEventHandler = <handlerType extends (this: EventTarget, event:Event)=>any>(handler: handlerType):handlerType =>{
-  let counter = 0;
-  // deno-lint-ignore no-explicit-any
-  return (function (this:EventTarget,event:Event):any {
-    const timediff = event.timeStamp - counter
-    if (timediff > 8) {
-      counter = event.timeStamp
-      return handler.call(this,event)
-    } else {
-      return;
-    }
-  } as handlerType)
-}
-
-// const cursorcontainer = document.createElement('span')
-// cursorcontainer.classList.add("cursorcontainer")
 const cursor = document.createElement('span')
 cursor.classList.add("cursor")
 const renderCursor = throttleEventHandler((ev:Event)=>{
@@ -251,15 +224,3 @@ const renderCursor = throttleEventHandler((ev:Event)=>{
 })
 
 document.addEventListener('selectionchange',renderCursor)
-
-async function RPCTest() {
-  const exampleSocket = new WebSocket("ws://localhost:8400/", "dcms");
-  const exampleChannel = await webSocket2Channel(exampleSocket);
-  const client = new Client<webinterface>();
-  client.connect(exampleChannel);
-  let result = await client.call('readArticle', new Uint8Array([1]));
-  // console.log(exampleSocket.readyState)
-  console.log(result);
-  result = await client.call('readArticle', new Uint8Array([255]));
-  console.log(result);
-}
