@@ -13,6 +13,7 @@ const treeHTMLNodeMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
 const treeHTMLTextMap:WeakMap<HTMLElement,rootTreeNode> = new WeakMap();
 
 const selectElem = document.querySelector("#format") as HTMLSelectElement
+let currentTree: rootTreeNode|undefined;
 selectElem.addEventListener("change",(_ev)=>{
   if(selectElem.value == "local-tmml"){
     mode.meta="local"
@@ -148,6 +149,7 @@ RPCTest();
  */
 const renderDoc = (tree:rootTreeNode) => {
   console.log(tree.toPlainObject());
+  currentTree = tree;
   // let displayTree = tree.cloneNode(true)
   const displayTreeRoot = document.createElement("div")
   console.groupCollapsed()
@@ -167,11 +169,16 @@ const renderDoc = (tree:rootTreeNode) => {
   
 }
 
+(document.querySelector("#debug1") as HTMLButtonElement)
+  ?.addEventListener("click", (_ev)=>{
+    console.log(currentTree?.toPlainObject())
+  })
+
 export const getEditableTextNode = (rawtext:string) => {
   const text = document.createElement("span");
   text.innerText = rawtext;
   text.contentEditable = "true";
-  text.addEventListener("input",function (ev){
+  text.addEventListener("input",function (_ev){
     if (treeHTMLTextMap.has(this)) {
       const tree = treeHTMLTextMap.get(this) as rootTreeNode
       tree.raw = this.textContent || ""
