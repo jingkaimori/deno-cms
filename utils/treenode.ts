@@ -9,15 +9,11 @@ export class treeNode<T extends nodeType.arbitary = nodeType.semantics> {
     name: T["type"];
     raw: string;
     #childs: treeNode[];
-    parent: T["parent"];
     auxilary:T["auxilary"];
-    // #namedchilds:Map<string,treeNode>
     constructor(name: T["type"]) {
         this.name = name;
         this.#childs = [];
-        // this.#namedchilds = new Map();
         this.raw = "";
-        this.parent = null;
         this.auxilary = {};
     }
     get childs(): readonly treeNode[]{
@@ -28,14 +24,10 @@ export class treeNode<T extends nodeType.arbitary = nodeType.semantics> {
         return this.#childs.find((v) => (v.name == name))
     }
     appendchilds(childsnew: Readonly<treeNode[]>): void {
-        for(const childnew of childsnew){
-            childnew.parent = this
-        }
         this.#childs = this.#childs.concat(childsnew);
     }
     appendchild(child: treeNode): treeNode {
         this.#childs.push(child);
-        child.parent = this;
         return child;
     }
     clearChilds():void{
@@ -80,7 +72,6 @@ export class treeNode<T extends nodeType.arbitary = nodeType.semantics> {
     clone(): treeNode<T> {
         const retval = new treeNode<T>(this.name);
         retval.raw = this.raw;
-        retval.parent = this.parent;
         retval.#childs = Array.from(this.#childs);
         retval.auxilary = this.auxilary
         return retval;
