@@ -3,6 +3,7 @@ import { treeNode } from "./treenode.ts";
 export interface arbitary {
     type:string;
     parent:treeNode<arbitary>|null;
+    childs: treeNode<arbitary>[]
     // deno-lint-ignore no-explicit-any
     auxilary:Record<string,any>;
 }
@@ -26,7 +27,6 @@ export interface display extends arbitary {
     parent:treeNode<semantics>|null;
     auxilary:{
         semanticRole: string;
-        relatedField: treeNode<semantics>;
         styleParam: Record<string,string|number|boolean>;
     }
 }

@@ -80,7 +80,7 @@ export type metadataType = {
 
 type passType = (tree: Node, context: Record<string, any>) => any;
 
-const dataMappers = new Processors<passType>(
+const dataMappers = new Processors<{[key in string]:passType}>(
     {
         "doc-data": function (_, data) {
             if (!data.docinfo) {
@@ -161,7 +161,7 @@ type renderPassType = (
     contextType,
 ] | [semanticsTreeNode];
 
-const renderMappers = new Processors<renderPassType>(
+const renderMappers = new Processors<{[key in string]:renderPassType}>(
     {
         "TeXmacs": function passTexmacsRoot(tree, output, _context) {
             const removedChilds = [];

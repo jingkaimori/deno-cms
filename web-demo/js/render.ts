@@ -40,7 +40,7 @@ type processer = (
     iptTree: Readonly<semanticsTreeNode>,
     resParent: HTMLElement,
 ) => {resElem: HTMLElement, mapType: MapType};
-const mappers = new Processors<processer>({
+const mappers = new Processors<{[key in string]:processer}>({
     "title": function name(tree, output) {
         // const match = tree.raw.match(/^=+/);
         // let lth = match?.at(0)?.length;

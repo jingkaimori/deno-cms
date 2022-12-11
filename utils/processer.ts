@@ -1,38 +1,27 @@
+// deno-lint-ignore-file ban-types
 "use strict";
 
-export class Processors<T>{
-    /** @type {Map<string,T>} */
-    __list: Map<string,T>;
-    /** @type {T} */
-    __default: T;
-    /**
-     * 
-     * @param {string} key 
-     * @returns {T}
-     */
-    getProcessor(key: string): T{
-        if(this.__list.has(key)){
-            return this.__list.get(key) as T;
-        }else{
-            return this.__default
+export class Processors<
+    T extends Record<string, Function>,
+    DefaultFunc extends Function = T[string],
+> {
+    #list: Map<keyof T, T[keyof T]>;
+    #default: DefaultFunc;
+    getProcessor(key: keyof T): T[typeof key] | DefaultFunc {
+        if (this.#list.has(key)) {
+            return this.#list.get(key) as T[typeof key];
+        } else {
+            return this.#default;
         }
     }
-    /**
-     * 
-     * @param {string} key 
-     * @returns {boolean}
-     */
-    hasProcessor(key: string): boolean{
-        return this.__list.has(key)
+    hasProcessor(key: keyof T): boolean {
+        return this.#list.has(key);
     }
-    /**
-     * 
-     * @param {{[k:string]:T}} register 
-     * @param {T} defaultP 
-     */
-    constructor(register: { [k: string]: T; },defaultP: T){
-        
-        this.__list = new Map(Object.entries(register));
-        this.__default = defaultP
+    constructor(register: T, defaultP: DefaultFunc) {
+        this.#list = new Map(Object.entries(register)) as Map<
+            keyof T,
+            T[keyof T]
+        >;
+        this.#default = defaultP;
     }
 }
