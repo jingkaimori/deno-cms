@@ -72,7 +72,6 @@ async function handleClick(this:HTMLLIElement) {
         "<?xml version='1.0",
       );
       const xmltree = parser.parseFromString(text, "text/xml") as XMLDocument;
-      console.log(xmltree);
       const content = String(
         xmltree.querySelector("xwikidoc > content")?.firstChild?.nodeValue,
       );
@@ -148,11 +147,11 @@ RPCTest();
  * @param tree 
  */
 const renderDoc = (tree:rootTreeNode) => {
+  console.groupCollapsed()
   console.log(tree.toPlainObject());
   currentTree = tree;
   // let displayTree = tree.cloneNode(true)
   const displayTreeRoot = document.createElement("div")
-  console.groupCollapsed()
   const [displayTree] = mapNode(
     tree,
     displayTreeRoot,
