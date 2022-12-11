@@ -1,3 +1,6 @@
+/**
+ * TODO: arraybuffer sending
+ */
 import { RemoteContent, RemoteValue } from "../types/repository.ts";
 import { status } from "../types/errors.ts";
 
