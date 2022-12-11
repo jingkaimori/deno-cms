@@ -60,13 +60,13 @@ export function symbol<T extends contextValue = emptyContext>(
     auxupdator:(context:Readonly<T>)=>nodeType.detached["auxilary"] = ()=>({})
 ): parserfunc<T> {
     const __symbol: parserfunc<T> = (str, subtree, context, stack, event) => {
-        const namevalue = value(name, subtree, context);
-        const childsymbol = new treeNode<nodeType.detached>(namevalue);
+        const childsymbol = new treeNode<nodeType.detached>("");
         const [receive, laststr] = func(str, childsymbol, context, stack, event);
         if (receive) {
             subtree.appendchild(childsymbol);
             childsymbol.auxilary = auxupdator(context)
             childsymbol.raw = consumedstr(str, laststr);
+            childsymbol.name = value(name, subtree, context);
         }
         return [receive, laststr];
     };
