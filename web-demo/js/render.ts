@@ -42,8 +42,6 @@ type processer = (
 ) => {resElem: HTMLElement, mapType: MapType};
 const mappers = new Processors<{[key in string]:processer}>({
     "title": function name(tree, output) {
-        // const match = tree.raw.match(/^=+/);
-        // let lth = match?.at(0)?.length;
         const lth = tree.auxilary.level;
         if (typeof lth == "number") {
             const title = document.createElement("h" + lth.toString());
@@ -127,6 +125,7 @@ const mappers = new Processors<{[key in string]:processer}>({
     "em": mapToNode("em"),
     "codespan": mapToNode("code"),
     "del": mapToNode("del"),
+    "macro-body": mapToText
 }, (i, r) => {
     console.warn("unknown node: " + i.name);
     console.info(i)

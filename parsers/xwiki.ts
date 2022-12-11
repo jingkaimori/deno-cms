@@ -124,6 +124,34 @@ function particleinmiddle(
     return seq(beginend, multiple(seq(middle, beginend)));
 }
 
+type macroContext = {
+    name: string,
+    attr: {
+        [key in string] : string | number
+    }
+}
+
+function macroScope(def:parserfunc<macroContext>):parserfunc {
+    return scope(
+        symbol(
+            def,
+            (_, context)=> {
+                console.log(context)
+                if (context.name !== "") {
+                    return "template-" + context.name
+                } else {
+                    return "template"
+                }
+            }
+        ),
+        (context)=>{
+            const newcontext = context as macroContext
+            newcontext.name = '';
+            return newcontext;
+        }
+    )
+}
+
 /**
  * @todo extract attribute
  */
@@ -135,57 +163,68 @@ const macroattr: parserfunc = seq(
             "template-attr")),
 );
 
-const macroname: parserfunc = symbol(match(/^[^ \/{}\n]*/), "__name");
+const macroname = modifycontext<macroContext>(
+    match(/^[^ \/{}\n]*/)
+    ,(context,str)=>{
+        context.name = str
+    });
 
-const macrobegin: parserfunc = seq(
+const macrobegin = seq(
     eq("{{"),
     macroname,
-    multiple(macroattr),
+    multiple(
+        not(or(eq("}}"), eq("/}}"), linebreak, empty))),
     eq("}}"),
 );
 
-const macroend: parserfunc = seq(
+const macroend = seq(
     eq("{{/"),
-    eq((context) => {
-        const namenode = context.childByName("__name");
-        return namenode?.raw ?? "";
+    eq<macroContext>((_,context) => {
+        console.log(context)
+        return context.name;
     }),
     eq("}}"),
 );
 
 const macrobody: parserfunc = symbol(
     multiple(neq("{{")),
-    "__plain",
+    "macro-body",
 );
 
-export const macrowithoutbody: parserfunc = symbol(
+export const macrowithoutbody: parserfunc = macroScope(
     seq(
         eq("{{"),
         macroname,
-        multiple(macroattr),
+        multiple(
+            not(or(eq("}}"), eq("/}}"), linebreak, empty))),
         eq("/}}"),
     ),
-    "template",
 );
 
-const macroblock: parserfunc = symbol(
+const macroblock: parserfunc = macroScope(
     seq(macrobegin, macrobody, macroend),
-    "template",
 );
 
 const macroinlinebody: parserfunc = symbol(
     multiple(not(or(eq("{{"), eq("\n"), empty))),
-    "__plain",
+    "macro-body",
 );
 
-const macroinline: parserfunc = symbol(
+const macroinline: parserfunc = macroScope(
     seq(macrobegin, macroinlinebody, macroend),
-    "template",
+);
+
+const pseudomacrobegin = seq(
+    eq("{{"),
+    match(/^[^ \/{}\n]*/),
+    multiple(
+        not(or(eq("}}"), eq("/}}"), linebreak, empty))),
+    eq("}}"),
 );
 
 export const plain: parserfunc = symbol(
     multiple(
-        not(or(link, escape, escapechar, macrobegin, linebreak, empty)),
+        not(or(link, escape, escapechar, pseudomacrobegin, linebreak, empty)),
         1,
     ),
     "text",
